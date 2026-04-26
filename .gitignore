@@ -39,6 +39,8 @@ yarn-error.log*
 .vscode/
 .idea/
 .claude/
+AGENTS.md
+CLAUDE.md
 .obsidian/
 wiki/.obsidian/
 wiki/
