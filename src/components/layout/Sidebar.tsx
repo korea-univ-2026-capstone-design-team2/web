@@ -8,7 +8,6 @@ import {
   BarChart2,
   Sparkles,
   User,
-  Settings,
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 
@@ -72,15 +71,6 @@ export function Sidebar({ onNavClick }: SidebarProps) {
 
       {/* Bottom section */}
       <div className="px-2 py-3 border-t border-border space-y-0.5">
-        <Link
-          href="/settings"
-          className="flex items-center gap-3 px-3 py-2 rounded-[6px] text-sm text-linear-text-tertiary hover:text-linear-text-secondary hover:bg-black/4 dark:hover:bg-white/6 transition-colors duration-150"
-          onClick={onNavClick}
-        >
-          <Settings size={16} strokeWidth={1.5} />
-          설정
-        </Link>
-
         {/* User info */}
         <div className="flex items-center gap-3 px-3 py-2 mt-1">
           <div className="w-7 h-7 rounded-full bg-linear-brand-indigo flex items-center justify-center flex-shrink-0">

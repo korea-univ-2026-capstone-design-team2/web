@@ -152,18 +152,22 @@ const weaknessList = [
 ];
 
 function getHeatColor(accuracy: number): string {
-  if (accuracy >= 85) return 'bg-[rgba(16,185,129,0.75)]';
-  if (accuracy >= 75) return 'bg-[rgba(16,185,129,0.45)]';
-  if (accuracy >= 65) return 'bg-[rgba(234,179,8,0.45)]';
-  if (accuracy >= 55) return 'bg-[rgba(249,115,22,0.45)]';
-  if (accuracy >= 45) return 'bg-[rgba(239,68,68,0.5)]';
-  return 'bg-[rgba(239,68,68,0.75)]';
-}
-
-function getHeatTextColor(accuracy: number): string {
-  if (accuracy >= 75) return 'text-[#f7f8f8]';
-  if (accuracy >= 55) return 'text-[#f7f8f8]';
-  return 'text-[#f7f8f8]';
+  if (accuracy >= 85) {
+    return 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-900 dark:border-emerald-300/30 dark:bg-emerald-400/30 dark:text-emerald-50';
+  }
+  if (accuracy >= 75) {
+    return 'border border-emerald-400/25 bg-emerald-400/10 text-emerald-800 dark:border-emerald-300/25 dark:bg-emerald-400/20 dark:text-emerald-100';
+  }
+  if (accuracy >= 65) {
+    return 'border border-amber-400/30 bg-amber-400/14 text-amber-900 dark:border-amber-300/25 dark:bg-amber-400/20 dark:text-amber-100';
+  }
+  if (accuracy >= 55) {
+    return 'border border-orange-400/30 bg-orange-400/14 text-orange-900 dark:border-orange-300/25 dark:bg-orange-400/20 dark:text-orange-100';
+  }
+  if (accuracy >= 45) {
+    return 'border border-rose-400/30 bg-rose-400/14 text-rose-900 dark:border-rose-300/25 dark:bg-rose-400/20 dark:text-rose-100';
+  }
+  return 'border border-red-500/35 bg-red-500/18 text-red-900 dark:border-red-300/30 dark:bg-red-400/28 dark:text-red-50';
 }
 
 export default function AnalyticsPage() {
@@ -226,7 +230,7 @@ export default function AnalyticsPage() {
                     <div
                       key={unit.name}
                       title={`${unit.name}: ${unit.accuracy}%`}
-                      className={`${getHeatColor(unit.accuracy)} ${getHeatTextColor(unit.accuracy)} rounded-[4px] px-2.5 py-1.5 text-xs font-medium cursor-default transition-opacity hover:opacity-80 whitespace-nowrap`}
+                      className={`${getHeatColor(unit.accuracy)} rounded-[4px] px-2.5 py-1.5 text-xs font-semibold cursor-default transition-opacity hover:opacity-80 whitespace-nowrap`}
                     >
                       <span>{unit.name}</span>
                       <span className="ml-1.5 opacity-80">{unit.accuracy}%</span>

@@ -89,9 +89,9 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-[6px] bg-[#28282c] border border-[rgba(255,255,255,0.12)] px-3 py-2 text-xs">
-      <p className="text-[#8a8f98] mb-0.5">{label}</p>
-      <p className="font-semibold text-[#14b8a6]">{payload[0].value}점</p>
+    <div className="rounded-[6px] border border-border bg-linear-bg-panel px-3 py-2 text-xs shadow-[var(--shadow-level-1)]">
+      <p className="mb-0.5 text-linear-text-tertiary">{label}</p>
+      <p className="font-semibold text-linear-accent-violet">{payload[0].value}점</p>
     </div>
   );
 }
@@ -136,30 +136,30 @@ export default function ResultPage() {
   }, []);
 
   const scoreColor =
-    score >= 80 ? 'text-[#10b981]' : score >= 60 ? 'text-amber-400' : 'text-[#ef4444]';
+    score >= 80 ? 'text-linear-status-emerald' : score >= 60 ? 'text-amber-500' : 'text-red-500';
 
   return (
-    <div className="min-h-screen bg-[#08090a] px-4 py-8 md:px-8">
+    <div className="min-h-screen bg-linear-bg-marketing px-4 py-8 text-linear-text-primary md:px-8">
       <div className="mx-auto max-w-4xl space-y-6">
 
         {/* ── Section 1: Score Summary ─────────────────────────── */}
-        <div className="rounded-[8px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-6 text-center">
+        <div className="rounded-[10px] border border-border bg-linear-bg-panel p-6 text-center shadow-[var(--shadow-level-2)]">
           <p className="mb-4 text-2xl">축하합니다!</p>
           <div className={cn('mb-1 text-7xl font-bold tabular-nums tracking-tight', scoreColor)}>
             {score}
             <span className="text-4xl">점</span>
           </div>
-          <p className="mb-6 text-sm text-[#8a8f98]">
+          <p className="mb-6 text-sm text-linear-text-tertiary">
             {correctCount} / {totalCount}문항 정답 ({((correctCount / totalCount) * 100).toFixed(1)}%)
           </p>
 
           <div className="mx-auto flex w-full max-w-xs justify-center gap-6 text-sm">
-            <div className="flex items-center gap-1.5 text-[#8a8f98]">
+            <div className="flex items-center gap-1.5 text-linear-text-tertiary">
               <Clock className="h-4 w-4" />
               <span>{formattedDuration}</span>
             </div>
-            <div className="h-4 w-px bg-[rgba(255,255,255,0.08)]" />
-            <div className="flex items-center gap-1.5 text-[#8a8f98]">
+            <div className="h-4 w-px bg-border" />
+            <div className="flex items-center gap-1.5 text-linear-text-tertiary">
               <Calendar className="h-4 w-4" />
               <span>{EXAM_DATE}</span>
             </div>
@@ -167,48 +167,48 @@ export default function ResultPage() {
 
           {/* Score band indicator */}
           <div className="mt-6 flex items-center justify-center gap-3">
-            <div className="h-2 flex-1 rounded-full bg-[rgba(239,68,68,0.3)]" style={{ maxWidth: 60 }} />
-            <div className="h-2 flex-1 rounded-full bg-[rgba(245,158,11,0.4)]" style={{ maxWidth: 80 }} />
+            <div className="h-2 flex-1 rounded-full bg-red-500/20" style={{ maxWidth: 60 }} />
+            <div className="h-2 flex-1 rounded-full bg-amber-500/25" style={{ maxWidth: 80 }} />
             <div
               className={cn(
                 'relative h-3 flex-1 rounded-full',
-                score >= 80 ? 'bg-[#10b981]' : score >= 60 ? 'bg-amber-400' : 'bg-[#ef4444]'
+                score >= 80 ? 'bg-linear-status-emerald' : score >= 60 ? 'bg-amber-500' : 'bg-red-500'
               )}
               style={{ maxWidth: `${score * 1.2}px`, minWidth: 20 }}
             >
-              <span className="absolute -top-5 right-0 text-xs font-semibold text-[#d0d6e0]">
+              <span className="absolute -top-5 right-0 text-xs font-semibold text-linear-text-secondary">
                 {score}
               </span>
             </div>
-            <div className="h-2 flex-1 rounded-full bg-[rgba(16,185,129,0.3)]" style={{ maxWidth: 60 }} />
+            <div className="h-2 flex-1 rounded-full bg-linear-status-emerald/20" style={{ maxWidth: 60 }} />
           </div>
         </div>
 
         {/* ── Section 2: Subject Score Chart ──────────────────── */}
-        <div className="rounded-[8px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-5">
+        <div className="rounded-[10px] border border-border bg-linear-bg-panel p-5 shadow-[var(--shadow-level-2)]">
           <div className="mb-4 flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-[#14b8a6]" />
-            <h2 className="text-sm font-semibold text-[#f7f8f8]">과목별 점수</h2>
+            <TrendingUp className="h-4 w-4 text-linear-accent-violet" />
+            <h2 className="text-sm font-semibold text-linear-text-primary">과목별 점수</h2>
           </div>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart
               data={subjectData}
               margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.22)" vertical={false} />
               <XAxis
                 dataKey="subject"
-                tick={{ fill: '#8a8f98', fontSize: 12 }}
+                tick={{ fill: '#6b7280', fontSize: 12 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 domain={[0, 100]}
-                tick={{ fill: '#8a8f98', fontSize: 11 }}
+                tick={{ fill: '#6b7280', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(15,118,110,0.07)' }} />
               <Bar dataKey="score" radius={[4, 4, 0, 0]}>
                 {subjectData.map((entry, index) => (
                   <Cell
@@ -222,22 +222,22 @@ export default function ResultPage() {
         </div>
 
         {/* ── Section 3: Question Table ────────────────────────── */}
-        <div className="rounded-[8px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] overflow-hidden">
-          <div className="flex items-center gap-2 border-b border-[rgba(255,255,255,0.08)] px-5 py-3.5">
-            <h2 className="text-sm font-semibold text-[#f7f8f8]">문항별 결과</h2>
-            <span className="ml-auto text-xs text-[#8a8f98]">
+        <div className="overflow-hidden rounded-[10px] border border-border bg-linear-bg-panel shadow-[var(--shadow-level-2)]">
+          <div className="flex items-center gap-2 border-b border-border px-5 py-3.5">
+            <h2 className="text-sm font-semibold text-linear-text-primary">문항별 결과</h2>
+            <span className="ml-auto text-xs text-linear-text-tertiary">
               총 {totalCount}문항
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[rgba(255,255,255,0.06)]">
-                  <th className="px-5 py-2.5 text-left text-xs font-medium text-[#8a8f98]">번호</th>
-                  <th className="px-3 py-2.5 text-left text-xs font-medium text-[#8a8f98]">내 답</th>
-                  <th className="px-3 py-2.5 text-left text-xs font-medium text-[#8a8f98]">정답</th>
-                  <th className="px-3 py-2.5 text-left text-xs font-medium text-[#8a8f98]">결과</th>
-                  <th className="px-3 py-2.5 text-left text-xs font-medium text-[#8a8f98]">난이도</th>
+                <tr className="border-b border-border">
+                  <th className="px-5 py-2.5 text-left text-xs font-medium text-linear-text-tertiary">번호</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-medium text-linear-text-tertiary">내 답</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-medium text-linear-text-tertiary">정답</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-medium text-linear-text-tertiary">결과</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-medium text-linear-text-tertiary">난이도</th>
                 </tr>
               </thead>
               <tbody>
@@ -245,34 +245,34 @@ export default function ResultPage() {
                   <tr
                     key={question.id}
                     className={cn(
-                      'border-b border-[rgba(255,255,255,0.04)] transition-colors',
+                      'border-b border-border/70 transition-colors',
                       isCorrect
-                        ? 'bg-[rgba(16,185,129,0.02)] hover:bg-[rgba(16,185,129,0.04)]'
-                        : 'bg-[rgba(239,68,68,0.02)] hover:bg-[rgba(239,68,68,0.04)]'
+                        ? 'bg-linear-status-emerald/5 hover:bg-linear-status-emerald/10'
+                        : 'bg-red-500/5 hover:bg-red-500/10'
                     )}
                   >
-                    <td className="px-5 py-2.5 text-[#d0d6e0] font-medium">{i + 1}</td>
+                    <td className="px-5 py-2.5 font-medium text-linear-text-secondary">{i + 1}</td>
                     <td className="px-3 py-2.5">
                       <span
                         className={cn(
                           'font-medium',
-                          isCorrect ? 'text-[#10b981]' : 'text-[#ef4444]'
+                          isCorrect ? 'text-linear-status-emerald' : 'text-red-500'
                         )}
                       >
                         {myAnswer ?? '-'}번
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 font-medium text-[#10b981]">
+                    <td className="px-3 py-2.5 font-medium text-linear-status-emerald">
                       {question.correctAnswer}번
                     </td>
                     <td className="px-3 py-2.5">
                       {isCorrect ? (
-                        <span className="flex items-center gap-1 text-[#10b981]">
+                        <span className="flex items-center gap-1 text-linear-status-emerald">
                           <CheckCircle2 className="h-4 w-4" />
                           <span className="text-xs">정답</span>
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1 text-[#ef4444]">
+                        <span className="flex items-center gap-1 text-red-500">
                           <XCircle className="h-4 w-4" />
                           <span className="text-xs">오답</span>
                         </span>
@@ -283,10 +283,10 @@ export default function ResultPage() {
                         className={cn(
                           'rounded-full px-2 py-0.5 text-xs',
                           question.difficulty === 'easy'
-                            ? 'bg-[rgba(16,185,129,0.1)] text-[#10b981]'
+                            ? 'bg-linear-status-emerald/10 text-linear-status-emerald'
                             : question.difficulty === 'medium'
-                              ? 'bg-[rgba(245,158,11,0.1)] text-amber-400'
-                              : 'bg-[rgba(239,68,68,0.1)] text-[#ef4444]'
+                              ? 'bg-amber-500/10 text-amber-500'
+                              : 'bg-red-500/10 text-red-500'
                         )}
                       >
                         {question.difficulty === 'easy' ? '하' : question.difficulty === 'medium' ? '중' : '상'}
@@ -301,21 +301,21 @@ export default function ResultPage() {
 
         {/* ── Section 4: Wrong Answer Analysis ────────────────── */}
         {wrongResults.length > 0 && (
-          <div className="rounded-[8px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] overflow-hidden">
-            <div className="flex items-center gap-2 border-b border-[rgba(255,255,255,0.08)] px-5 py-3.5">
-              <XCircle className="h-4 w-4 text-[#ef4444]" />
-              <h2 className="text-sm font-semibold text-[#f7f8f8]">
+          <div className="overflow-hidden rounded-[10px] border border-border bg-linear-bg-panel shadow-[var(--shadow-level-2)]">
+            <div className="flex items-center gap-2 border-b border-border px-5 py-3.5">
+              <XCircle className="h-4 w-4 text-red-500" />
+              <h2 className="text-sm font-semibold text-linear-text-primary">
                 오답 풀이{' '}
-                <span className="text-[#8a8f98] font-normal">({wrongResults.length}문제)</span>
+                <span className="font-normal text-linear-text-tertiary">({wrongResults.length}문제)</span>
               </h2>
             </div>
-            <Accordion className="divide-y divide-[rgba(255,255,255,0.04)]">
-              {wrongResults.map(({ question, myAnswer }, idx) => (
+            <Accordion className="divide-y divide-border/70">
+              {wrongResults.map(({ question, myAnswer }) => (
                 <AccordionItem key={question.id} value={question.id}>
                   <div className="px-5">
-                    <AccordionTrigger className="py-3 text-sm text-[#d0d6e0] hover:no-underline hover:text-[#f7f8f8]">
+                    <AccordionTrigger className="py-3 text-sm text-linear-text-secondary hover:no-underline hover:text-linear-text-primary">
                       <div className="flex items-center gap-2 text-left">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[rgba(239,68,68,0.15)] text-[10px] font-semibold text-[#ef4444] shrink-0">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-[10px] font-semibold text-red-500">
                           {question.number}
                         </span>
                         <span className="line-clamp-1">{question.content}</span>
@@ -342,9 +342,9 @@ export default function ResultPage() {
                       })}
                     </div>
                     {explanations[question.id] && (
-                      <div className="mt-3 rounded-[6px] border border-[rgba(20,184,166,0.2)] bg-[rgba(20,184,166,0.06)] px-4 py-3">
-                        <p className="text-xs font-medium text-[#14b8a6] mb-1">해설</p>
-                        <p className="text-sm leading-relaxed text-[#d0d6e0]">
+                      <div className="mt-3 rounded-[6px] border border-linear-brand-indigo/25 bg-linear-brand-indigo/8 px-4 py-3">
+                        <p className="mb-1 text-xs font-medium text-linear-accent-violet">해설</p>
+                        <p className="text-sm leading-relaxed text-linear-text-secondary">
                           {explanations[question.id]}
                         </p>
                       </div>
@@ -357,28 +357,28 @@ export default function ResultPage() {
         )}
 
         {/* ── Section 5: AI Analysis ───────────────────────────── */}
-        <div className="rounded-[8px] border border-[rgba(20,184,166,0.2)] bg-[rgba(20,184,166,0.04)] p-5">
+        <div className="rounded-[10px] border border-linear-brand-indigo/20 bg-linear-brand-indigo/8 p-5 shadow-[var(--shadow-level-1)]">
           <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(20,184,166,0.15)]">
-              <Bot className="h-4 w-4 text-[#14b8a6]" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-brand-indigo/18">
+              <Bot className="h-4 w-4 text-linear-accent-violet" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#f7f8f8]">AI 분석</p>
-              <p className="text-xs text-[#8a8f98]">학습 패턴 기반 맞춤 분석</p>
+              <p className="text-sm font-semibold text-linear-text-primary">AI 분석</p>
+              <p className="text-xs text-linear-text-tertiary">학습 패턴 기반 맞춤 분석</p>
             </div>
           </div>
-          <p className="text-sm leading-7 text-[#d0d6e0]">
+          <p className="text-sm leading-7 text-linear-text-secondary">
             이번 시험에서{' '}
-            <span className="font-semibold text-[#f7f8f8]">어법/맞춤법 영역</span>이 취약점으로
+            <span className="font-semibold text-linear-text-primary">어법/맞춤법 영역</span>이 취약점으로
             분석됩니다. 전체 오답 {wrongResults.length}개 중{' '}
-            <span className="text-[#ef4444] font-medium">
+            <span className="font-medium text-red-500">
               {wrongResults.filter((r) => ['q4', 'q3', 'q6', 'q18'].includes(r.question.id)).length}개
             </span>
             가 해당 단원에서 발생했습니다.
             <br />
             다음 학습 시{' '}
-            <span className="font-medium text-[#14b8a6]">&#39;표준어 규정&#39;</span>과{' '}
-            <span className="font-medium text-[#14b8a6]">&#39;한글 맞춤법&#39;</span> 단원을 집중적으로
+            <span className="font-medium text-linear-accent-violet">&#39;표준어 규정&#39;</span>과{' '}
+            <span className="font-medium text-linear-accent-violet">&#39;한글 맞춤법&#39;</span> 단원을 집중적으로
             복습하시고, 기출문제 2021~2023년도를 추가로 풀어보실 것을 권장합니다.
           </p>
 
@@ -387,7 +387,7 @@ export default function ResultPage() {
             {['어법', '맞춤법', '이중 피동', '높임법 오용'].map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.08)] px-2.5 py-1 text-xs text-[#ef4444]"
+                className="rounded-full border border-red-500/25 bg-red-500/10 px-2.5 py-1 text-xs text-red-500"
               >
                 {tag}
               </span>
@@ -399,7 +399,7 @@ export default function ResultPage() {
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
             href="/recommend"
-            className="flex flex-1 items-center justify-center gap-2 rounded-[8px] bg-[#0f766e] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#115e59]"
+            className="flex flex-1 items-center justify-center gap-2 rounded-[8px] bg-linear-brand-indigo py-3 text-sm font-semibold text-white transition-colors hover:bg-linear-brand-indigo/90"
           >
             <Zap className="h-4 w-4" />
             취약파트 집중 학습 시작
@@ -407,14 +407,14 @@ export default function ResultPage() {
           </Link>
           <Link
             href="/exam"
-            className="flex flex-1 items-center justify-center gap-2 rounded-[8px] border border-[rgba(255,255,255,0.12)] py-3 text-sm font-medium text-[#d0d6e0] transition-all hover:border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.04)]"
+            className="flex flex-1 items-center justify-center gap-2 rounded-[8px] border border-border bg-linear-bg-surface py-3 text-sm font-medium text-linear-text-secondary transition-all hover:bg-black/3 dark:hover:bg-white/6"
           >
             <RotateCcw className="h-4 w-4" />
             다시 풀기
           </Link>
           <Link
             href="/dashboard"
-            className="flex flex-1 items-center justify-center gap-2 rounded-[8px] border border-[rgba(255,255,255,0.12)] py-3 text-sm font-medium text-[#d0d6e0] transition-all hover:border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.04)]"
+            className="flex flex-1 items-center justify-center gap-2 rounded-[8px] border border-border bg-linear-bg-surface py-3 text-sm font-medium text-linear-text-secondary transition-all hover:bg-black/3 dark:hover:bg-white/6"
           >
             <LayoutDashboard className="h-4 w-4" />
             대시보드로 이동

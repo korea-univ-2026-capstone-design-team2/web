@@ -19,7 +19,10 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       type="button"
       variant="outline"
       size="icon-sm"
-      className={cn("rounded-full border-white/15 bg-white/60 backdrop-blur-sm dark:bg-white/5", className)}
+      className={cn(
+        "rounded-full border-border/80 bg-white/60 backdrop-blur-sm dark:border-white/15 dark:bg-white/5",
+        className
+      )}
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
       title={isDark ? "라이트 모드" : "다크 모드"}

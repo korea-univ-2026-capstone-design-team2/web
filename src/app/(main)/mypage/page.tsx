@@ -16,11 +16,11 @@ import {
 // ── Mock Data ────────────────────────────────────────────────────────────────
 
 const mockUser = {
-  name: "김민준",
-  email: "minjun@example.com",
+  name: "양인용",
+  email: "inyong@example.com",
   targetExam: "9급 국가직",
   targetScore: 90,
-  initials: "김민",
+  initials: "양인",
 };
 
 const mockStats = [

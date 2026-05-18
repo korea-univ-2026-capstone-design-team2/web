@@ -32,7 +32,7 @@ export default function QuestionCard({
     return (
       <div className="flex h-full flex-col gap-4 lg:flex-row">
         {/* Passage */}
-        <div className="flex-1 rounded-[8px] bg-white/2 border border-white/8 p-4 lg:overflow-y-auto lg:max-h-[calc(100vh-200px)]">
+        <div className="flex-1 rounded-[10px] border border-border bg-linear-bg-surface p-4 lg:overflow-y-auto lg:max-h-[calc(100vh-260px)]">
           <div className="mb-2 text-xs font-medium uppercase tracking-wider text-linear-text-tertiary">
             지문
           </div>

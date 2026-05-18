@@ -1,22 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  Bookmark,
-  BookmarkCheck,
-  HelpCircle,
   ChevronLeft,
   ChevronRight,
   Clock,
-  LayoutGrid,
   AlertTriangle,
-  CheckCircle2,
-  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import QuestionCard, { type Question } from '@/components/exam/QuestionCard';
-import QuestionNavPanel from '@/components/exam/QuestionNavPanel';
 import {
   Sheet,
   SheetContent,
@@ -340,357 +333,307 @@ export default function ExamSessionPage() {
   const examId = params.examId as string;
 
   const TOTAL = mockQuestions.length;
-  const TIME_LIMIT_SECONDS = 45 * 60; // 45 minutes
+  const TIME_LIMIT_SECONDS = 45 * 60;
+  const QUESTIONS_PER_VIEW = 4;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
-  const [unknowns, setUnknowns] = useState<Set<number>>(new Set());
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT_SECONDS);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const [isQuestionPanelOpen, setIsQuestionPanelOpen] = useState(false);
+  const [isOmrPanelOpen, setIsOmrPanelOpen] = useState(false);
 
-  // Timer
   useEffect(() => {
     if (timeLeft <= 0) {
-      handleSubmitConfirm();
+      router.push(`/exam/${examId}/result`);
       return;
     }
     const id = setInterval(() => setTimeLeft((t) => t - 1), 1000);
     return () => clearInterval(id);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeLeft]);
+  }, [timeLeft, router, examId]);
 
-  const handleAnswer = useCallback((optionNumber: number) => {
-    setAnswers((prev) => ({ ...prev, [currentIndex]: optionNumber }));
-  }, [currentIndex]);
+  const pageStart = Math.floor(currentIndex / QUESTIONS_PER_VIEW) * QUESTIONS_PER_VIEW;
+  const visibleQuestions = mockQuestions.slice(pageStart, pageStart + QUESTIONS_PER_VIEW);
+  const answeredCount = Object.keys(answers).length;
+  const unansweredCount = TOTAL - answeredCount;
+  const progress = (answeredCount / TOTAL) * 100;
+  const isLowTime = timeLeft < 5 * 60;
 
-  const toggleBookmark = useCallback(() => {
-    setBookmarks((prev) => {
-      const next = new Set(prev);
-      if (next.has(currentIndex)) next.delete(currentIndex);
-      else next.add(currentIndex);
-      return next;
-    });
-  }, [currentIndex]);
+  function handleAnswer(questionIndex: number, optionNumber: number) {
+    setAnswers((prev) => ({ ...prev, [questionIndex]: optionNumber }));
+    setCurrentIndex(questionIndex);
+  }
 
-  const toggleUnknown = useCallback(() => {
-    setUnknowns((prev) => {
-      const next = new Set(prev);
-      if (next.has(currentIndex)) next.delete(currentIndex);
-      else next.add(currentIndex);
-      return next;
-    });
-  }, [currentIndex]);
+  function movePage(direction: 'prev' | 'next') {
+    if (direction === 'prev') {
+      setCurrentIndex((idx) => Math.max(0, idx - QUESTIONS_PER_VIEW));
+      return;
+    }
+    setCurrentIndex((idx) => Math.min(TOTAL - 1, idx + QUESTIONS_PER_VIEW));
+  }
 
   function handleSubmitConfirm() {
     router.push(`/exam/${examId}/result`);
   }
 
-  const question = mockQuestions[currentIndex];
-  const answeredCount = Object.keys(answers).length;
-  const unansweredCount = TOTAL - answeredCount;
-  const progress = (answeredCount / TOTAL) * 100;
-  const isLowTime = timeLeft < 5 * 60;
-  const isBookmarked = bookmarks.has(currentIndex);
-  const isUnknown = unknowns.has(currentIndex);
-
-  return (
-    <div className="flex h-screen flex-col overflow-hidden bg-[#08090a]">
-
-      {/* ── Fixed Header ─────────────────────────────────────────── */}
-      <header className="flex shrink-0 flex-col border-b border-[rgba(255,255,255,0.08)] bg-[#0f1011]">
-        <div className="flex items-center justify-between px-4 py-3">
-          {/* Left: exam info */}
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setIsSubmitModalOpen(true)}
-              className="hidden rounded-[6px] border border-[rgba(255,255,255,0.08)] px-3 py-1.5 text-xs text-[#8a8f98] hover:text-[#d0d6e0] transition-colors sm:flex items-center gap-1.5"
-            >
-              <X className="h-3.5 w-3.5" />
-              나가기
-            </button>
-            <div className="h-4 w-px bg-[rgba(255,255,255,0.08)] hidden sm:block" />
-            <div>
-              <span className="text-sm font-semibold text-[#f7f8f8]">9급 국가직</span>
-              <span className="mx-2 text-[#8a8f98]">·</span>
-              <span className="text-sm text-[#8a8f98]">국어</span>
+  function renderOmrPanel() {
+    return (
+      <div className="flex h-full flex-col rounded-[12px] border border-border bg-linear-bg-panel shadow-[var(--shadow-level-2)]">
+        <div className="border-b border-border px-4 py-4">
+          <div className="rounded-[10px] border border-border bg-linear-bg-surface px-3 py-3">
+            <div className="text-xs text-linear-text-tertiary">제한 시간</div>
+            <div className="mt-0.5 flex items-center gap-2 text-sm font-semibold text-linear-text-secondary">
+              <Clock className="h-4 w-4 text-linear-text-tertiary" />
+              {formatTime(TIME_LIMIT_SECONDS)}
             </div>
-          </div>
-
-          {/* Center: question count */}
-          <div className="absolute left-1/2 -translate-x-1/2 text-sm font-medium text-[#d0d6e0]">
-            <span className="text-[#14b8a6] font-semibold">{currentIndex + 1}</span>
-            <span className="text-[#8a8f98]"> / {TOTAL} 문제</span>
-          </div>
-
-          {/* Right: timer */}
-          <div className="flex items-center gap-3">
+            <div className="mt-2 h-px bg-border" />
+            <div className="mt-2 text-xs text-linear-text-tertiary">남은 시간</div>
             <div
               className={cn(
-                'flex items-center gap-2 rounded-[8px] border px-3 py-1.5 font-mono text-sm font-semibold tabular-nums',
-                isLowTime
-                  ? 'border-[rgba(239,68,68,0.3)] bg-[rgba(239,68,68,0.08)] text-[#ef4444]'
-                  : 'border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-[#d0d6e0]'
+                'mt-0.5 text-lg font-semibold tabular-nums',
+                isLowTime ? 'text-red-500' : 'text-linear-brand-indigo'
               )}
             >
-              <Clock className={cn('h-3.5 w-3.5', isLowTime ? 'text-[#ef4444]' : 'text-[#8a8f98]')} />
               {formatTime(timeLeft)}
             </div>
-
-            {/* Mobile: open panel */}
-            <button
-              type="button"
-              onClick={() => setIsQuestionPanelOpen(true)}
-              className="flex items-center gap-1.5 rounded-[6px] border border-[rgba(255,255,255,0.08)] px-3 py-1.5 text-xs text-[#8a8f98] hover:text-[#d0d6e0] transition-colors lg:hidden"
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">문제 목록</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="h-1 w-full bg-[rgba(255,255,255,0.04)]">
-          <div
-            className="h-full bg-[#0f766e] transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </header>
-
-      {/* ── Body ─────────────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden">
-
-        {/* Desktop Question Nav Panel */}
-        <aside className="hidden w-[240px] shrink-0 flex-col border-r border-[rgba(255,255,255,0.08)] bg-[#0f1011] lg:flex">
-          <div className="flex-1 overflow-y-auto p-4">
-            <QuestionNavPanel
-              totalQuestions={TOTAL}
-              currentIndex={currentIndex}
-              answers={answers}
-              bookmarks={bookmarks}
-              unknowns={unknowns}
-              onSelect={(i) => setCurrentIndex(i)}
-            />
           </div>
 
-          {/* Submit button */}
-          <div className="border-t border-[rgba(255,255,255,0.08)] p-4">
-            <button
-              type="button"
-              onClick={() => setIsSubmitModalOpen(true)}
-              className="w-full rounded-[8px] bg-[#0f766e] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#115e59]"
-            >
-              제출하기
-            </button>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex flex-1 flex-col overflow-hidden">
-          {/* Question Area */}
-          <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
-            <div className="mx-auto max-w-3xl">
-              <QuestionCard
-                question={question}
-                selectedAnswer={answers[currentIndex]}
-                onAnswer={handleAnswer}
-              />
-
-              {/* Action Buttons */}
-              <div className="mt-6 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={toggleBookmark}
-                  className={cn(
-                    'flex items-center gap-2 rounded-[6px] border px-3 py-2 text-sm transition-all',
-                    isBookmarked
-                      ? 'border-[rgba(20,184,166,0.4)] bg-[rgba(20,184,166,0.1)] text-[#14b8a6]'
-                      : 'border-[rgba(255,255,255,0.08)] text-[#8a8f98] hover:border-[rgba(255,255,255,0.2)] hover:text-[#d0d6e0]'
-                  )}
-                >
-                  {isBookmarked ? (
-                    <BookmarkCheck className="h-4 w-4" />
-                  ) : (
-                    <Bookmark className="h-4 w-4" />
-                  )}
-                  <span className="hidden sm:inline">북마크</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={toggleUnknown}
-                  className={cn(
-                    'flex items-center gap-2 rounded-[6px] border px-3 py-2 text-sm transition-all',
-                    isUnknown
-                      ? 'border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.1)] text-amber-400'
-                      : 'border-[rgba(255,255,255,0.08)] text-[#8a8f98] hover:border-[rgba(255,255,255,0.2)] hover:text-[#d0d6e0]'
-                  )}
-                >
-                  <HelpCircle className="h-4 w-4" />
-                  <span className="hidden sm:inline">모르는 문제</span>
-                </button>
-
-                {/* Mobile submit */}
-                <button
-                  type="button"
-                  onClick={() => setIsSubmitModalOpen(true)}
-                  className="ml-auto flex items-center gap-1.5 rounded-[6px] border border-[rgba(15,118,110,0.3)] bg-[rgba(15,118,110,0.08)] px-3 py-2 text-sm text-[#14b8a6] transition-all hover:bg-[rgba(15,118,110,0.16)] lg:hidden"
-                >
-                  제출하기
-                </button>
-              </div>
+          <div className="mt-3 rounded-[10px] border border-border bg-linear-bg-surface px-3 py-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-linear-text-tertiary">전체 문제</span>
+              <span className="font-semibold text-linear-text-primary">{TOTAL}</span>
+            </div>
+            <div className="mt-1.5 flex items-center justify-between">
+              <span className="text-linear-text-tertiary">안 푼 문제</span>
+              <span className="font-semibold text-red-500">{unansweredCount}</span>
+            </div>
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/6 dark:bg-white/8">
+              <div className="h-full bg-linear-brand-indigo transition-all" style={{ width: `${progress}%` }} />
             </div>
           </div>
+        </div>
 
-          {/* Navigation Footer */}
-          <div className="shrink-0 border-t border-[rgba(255,255,255,0.08)] bg-[#0f1011] px-4 py-3 md:px-8">
-            <div className="mx-auto flex max-w-3xl items-center justify-between">
+        <div className="border-b border-border px-4 py-3">
+          <h2 className="linear-text-small-medium text-linear-text-secondary">답안 표기란</h2>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-3 py-3">
+          <div className="space-y-1.5">
+            {Array.from({ length: TOTAL }, (_, index) => {
+              const selected = answers[index];
+              const isCurrent = index === currentIndex;
+              return (
+                <div
+                  key={index}
+                  className={cn(
+                    'grid grid-cols-[32px_1fr] items-center gap-2 rounded-[8px] border px-2 py-1.5 transition-colors',
+                    isCurrent
+                      ? 'border-linear-brand-indigo/40 bg-linear-brand-indigo/8'
+                      : 'border-border bg-linear-bg-surface'
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setCurrentIndex(index)}
+                    className={cn(
+                      'flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold',
+                      isCurrent
+                        ? 'bg-linear-brand-indigo text-white'
+                        : selected
+                          ? 'bg-linear-brand-indigo/15 text-linear-accent-violet'
+                          : 'border border-border text-linear-text-tertiary'
+                    )}
+                  >
+                    {index + 1}
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((choice) => {
+                      const checked = selected === choice;
+                      return (
+                        <button
+                          key={choice}
+                          type="button"
+                          onClick={() => handleAnswer(index, choice)}
+                          className={cn(
+                            'flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-semibold transition-colors',
+                            checked
+                              ? 'border-linear-brand-indigo bg-linear-brand-indigo text-white'
+                              : 'border-border bg-linear-bg-surface text-linear-text-tertiary hover:border-linear-brand-indigo/40 hover:text-linear-text-secondary'
+                          )}
+                        >
+                          {choice}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="border-t border-border p-3">
+          <button
+            type="button"
+            onClick={() => setIsSubmitModalOpen(true)}
+            className="w-full rounded-[8px] bg-linear-brand-indigo py-2.5 text-sm font-semibold text-white transition-colors hover:bg-linear-brand-indigo/90"
+          >
+            답안 제출하기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-linear-bg-marketing px-3 py-4 text-linear-text-primary md:px-6 md:py-6">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-4">
+        <header className="rounded-[12px] border border-border bg-linear-bg-panel px-4 py-3 shadow-[var(--shadow-level-1)]">
+          <div className="flex flex-wrap items-center gap-3">
+            <div>
+              <p className="text-xs text-linear-text-tertiary">실전 응시</p>
+              <h1 className="linear-text-body-medium text-linear-text-primary">
+                9급 국가직 국어 시험
+              </h1>
+            </div>
+
+            <div className="ml-auto flex items-center gap-2">
+              <div
+                className={cn(
+                  'rounded-[8px] border px-3 py-1.5 text-sm font-semibold tabular-nums',
+                  isLowTime
+                    ? 'border-red-500/25 bg-red-500/8 text-red-500'
+                    : 'border-border bg-linear-bg-surface text-linear-accent-violet'
+                )}
+              >
+                남은 시간 {formatTime(timeLeft)}
+              </div>
               <button
                 type="button"
-                onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
-                disabled={currentIndex === 0}
-                className="flex items-center gap-2 rounded-[8px] border border-[rgba(255,255,255,0.08)] px-4 py-2.5 text-sm font-medium text-[#d0d6e0] transition-all hover:border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.04)] disabled:cursor-not-allowed disabled:opacity-40"
+                onClick={() => setIsOmrPanelOpen(true)}
+                className="rounded-[8px] border border-border bg-linear-bg-surface px-3 py-1.5 text-xs text-linear-text-secondary lg:hidden"
+              >
+                OMR 보기
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <main className="rounded-[12px] border border-border bg-linear-bg-panel shadow-[var(--shadow-level-2)]">
+            <div className="border-b border-border px-5 py-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-linear-text-tertiary">
+                  현재 묶음: <span className="font-semibold text-linear-text-primary">{pageStart + 1}~{Math.min(pageStart + QUESTIONS_PER_VIEW, TOTAL)}번</span>
+                </p>
+                <p className="text-sm text-linear-text-tertiary">
+                  진행도 <span className="font-semibold text-linear-accent-violet">{answeredCount}/{TOTAL}</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="max-h-[calc(100vh-210px)] space-y-4 overflow-y-auto px-5 py-5">
+              {visibleQuestions.map((question, idx) => {
+                const absoluteIndex = pageStart + idx;
+                const isCurrent = absoluteIndex === currentIndex;
+                return (
+                  <section
+                    key={question.id}
+                    className={cn(
+                      'rounded-[12px] border p-4 md:p-5',
+                      isCurrent
+                        ? 'border-linear-brand-indigo/35 bg-linear-brand-indigo/6'
+                        : 'border-border bg-linear-bg-surface'
+                    )}
+                  >
+                    <QuestionCard
+                      question={question}
+                      selectedAnswer={answers[absoluteIndex]}
+                      onAnswer={(optionNumber) => handleAnswer(absoluteIndex, optionNumber)}
+                    />
+                  </section>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between border-t border-border px-5 py-3">
+              <button
+                type="button"
+                onClick={() => movePage('prev')}
+                disabled={pageStart === 0}
+                className="inline-flex items-center gap-1.5 rounded-[8px] border border-border bg-linear-bg-surface px-3 py-2 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/6"
               >
                 <ChevronLeft className="h-4 w-4" />
-                이전
+                이전 묶음
               </button>
-
-              {/* Center indicators */}
-              <div className="hidden items-center gap-1 sm:flex">
-                {Array.from({ length: Math.min(TOTAL, 7) }, (_, i) => {
-                  const startIdx = Math.max(0, Math.min(currentIndex - 3, TOTAL - 7));
-                  const qIdx = startIdx + i;
-                  if (qIdx >= TOTAL) return null;
-                  const isAnswered = qIdx in answers;
-                  const isCurr = qIdx === currentIndex;
-                  return (
-                    <button
-                      key={qIdx}
-                      type="button"
-                      onClick={() => setCurrentIndex(qIdx)}
-                      className={cn(
-                        'flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition-all',
-                        isCurr
-                          ? 'bg-[#0f766e] text-white'
-                          : isAnswered
-                            ? 'bg-[rgba(15,118,110,0.2)] text-[#14b8a6]'
-                            : 'text-[#8a8f98] hover:text-[#d0d6e0]'
-                      )}
-                    >
-                      {qIdx + 1}
-                    </button>
-                  );
-                })}
-              </div>
 
               <button
                 type="button"
-                onClick={() => setCurrentIndex((i) => Math.min(TOTAL - 1, i + 1))}
-                disabled={currentIndex === TOTAL - 1}
-                className="flex items-center gap-2 rounded-[8px] border border-[rgba(255,255,255,0.08)] px-4 py-2.5 text-sm font-medium text-[#d0d6e0] transition-all hover:border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.04)] disabled:cursor-not-allowed disabled:opacity-40"
+                onClick={() => movePage('next')}
+                disabled={pageStart + QUESTIONS_PER_VIEW >= TOTAL}
+                className="inline-flex items-center gap-1.5 rounded-[8px] border border-border bg-linear-bg-surface px-3 py-2 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/6"
               >
-                다음
+                다음 묶음
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
-          </div>
-        </main>
+          </main>
+
+          <aside className="hidden h-[calc(100vh-170px)] lg:block">
+            {renderOmrPanel()}
+          </aside>
+        </div>
       </div>
 
-      {/* ── Mobile Question Panel Sheet ──────────────────────────── */}
-      <Sheet open={isQuestionPanelOpen} onOpenChange={setIsQuestionPanelOpen}>
-        <SheetContent side="bottom" className="bg-[#0f1011] border-t border-[rgba(255,255,255,0.08)] max-h-[80vh]">
-          <SheetHeader className="border-b border-[rgba(255,255,255,0.08)] pb-3">
-            <SheetTitle className="text-[#f7f8f8]">문제 목록</SheetTitle>
+      <Sheet open={isOmrPanelOpen} onOpenChange={setIsOmrPanelOpen}>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-hidden rounded-t-[16px] border-t border-border bg-linear-bg-marketing p-0">
+          <SheetHeader className="border-b border-border px-4 py-3">
+            <SheetTitle className="text-linear-text-primary">OMR 답안 표기란</SheetTitle>
           </SheetHeader>
-          <div className="overflow-y-auto p-4">
-            <QuestionNavPanel
-              totalQuestions={TOTAL}
-              currentIndex={currentIndex}
-              answers={answers}
-              bookmarks={bookmarks}
-              unknowns={unknowns}
-              onSelect={(i) => {
-                setCurrentIndex(i);
-                setIsQuestionPanelOpen(false);
-              }}
-            />
-          </div>
-          <div className="border-t border-[rgba(255,255,255,0.08)] p-4">
-            <button
-              type="button"
-              onClick={() => {
-                setIsQuestionPanelOpen(false);
-                setIsSubmitModalOpen(true);
-              }}
-              className="w-full rounded-[8px] bg-[#0f766e] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#115e59]"
-            >
-              제출하기
-            </button>
+          <div className="h-[calc(85vh-60px)] p-3">
+            {renderOmrPanel()}
           </div>
         </SheetContent>
       </Sheet>
 
-      {/* ── Submit Modal ──────────────────────────────────────────── */}
       <Dialog open={isSubmitModalOpen} onOpenChange={setIsSubmitModalOpen}>
-        <DialogContent className="bg-[#191a1b] border border-[rgba(255,255,255,0.1)] text-[#f7f8f8] sm:max-w-md">
+        <DialogContent className="sm:max-w-md border border-border bg-linear-bg-panel text-linear-text-primary">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-[#f7f8f8]">
-              <AlertTriangle className="h-5 w-5 text-amber-400" />
+            <DialogTitle className="flex items-center gap-2 text-linear-text-primary">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
               시험 제출
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            <p className="text-sm text-[#d0d6e0]">
-              시험을 제출하면 다시 수정할 수 없습니다. 제출하시겠습니까?
+          <div className="space-y-4 py-1">
+            <p className="text-sm text-linear-text-secondary">
+              시험을 제출하면 더 이상 수정할 수 없습니다.
             </p>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-[8px] bg-[rgba(15,118,110,0.08)] border border-[rgba(15,118,110,0.2)] p-3 text-center">
-                <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <CheckCircle2 className="h-4 w-4 text-[#10b981]" />
-                  <span className="text-xs text-[#8a8f98]">답변 완료</span>
-                </div>
-                <p className="text-xl font-bold text-[#f7f8f8]">{answeredCount}</p>
-                <p className="text-xs text-[#8a8f98]">문항</p>
+              <div className="rounded-[8px] border border-linear-brand-indigo/25 bg-linear-brand-indigo/10 p-3 text-center">
+                <span className="text-xs text-linear-text-tertiary">답변 완료</span>
+                <p className="mt-1 text-2xl font-bold text-linear-text-primary">{answeredCount}</p>
               </div>
-              <div className="rounded-[8px] bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] p-3 text-center">
-                <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <HelpCircle className="h-4 w-4 text-[#8a8f98]" />
-                  <span className="text-xs text-[#8a8f98]">미답변</span>
-                </div>
-                <p className="text-xl font-bold text-[#f7f8f8]">{unansweredCount}</p>
-                <p className="text-xs text-[#8a8f98]">문항</p>
+              <div className="rounded-[8px] border border-border bg-linear-bg-surface p-3 text-center">
+                <span className="text-xs text-linear-text-tertiary">미응답</span>
+                <p className="mt-1 text-2xl font-bold text-red-500">{unansweredCount}</p>
               </div>
             </div>
-
-            {unansweredCount > 0 && (
-              <div className="flex items-start gap-2 rounded-[6px] bg-[rgba(245,158,11,0.08)] border border-[rgba(245,158,11,0.2)] px-3 py-2.5">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-                <p className="text-xs text-amber-300">
-                  아직 {unansweredCount}개 문항에 답하지 않았습니다.
-                  제출 후에는 수정이 불가능합니다.
-                </p>
-              </div>
-            )}
           </div>
 
-          <DialogFooter className="bg-transparent border-0 p-0 flex-row gap-2">
+          <DialogFooter className="flex-row gap-2">
             <button
               type="button"
               onClick={() => setIsSubmitModalOpen(false)}
-              className="flex-1 rounded-[8px] border border-[rgba(255,255,255,0.12)] py-2.5 text-sm font-medium text-[#d0d6e0] transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+              className="flex-1 rounded-[8px] border border-border bg-linear-bg-surface py-2.5 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 dark:hover:bg-white/6"
             >
               계속 풀기
             </button>
             <button
               type="button"
               onClick={handleSubmitConfirm}
-              className="flex-1 rounded-[8px] bg-[#0f766e] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#115e59]"
+              className="flex-1 rounded-[8px] bg-linear-brand-indigo py-2.5 text-sm font-semibold text-white transition-colors hover:bg-linear-brand-indigo/90"
             >
               최종 제출
             </button>

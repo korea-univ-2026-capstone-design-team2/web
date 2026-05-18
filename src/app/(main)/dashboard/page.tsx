@@ -93,7 +93,7 @@ export default function DashboardPage() {
 
         {/* Header Greeting */}
         <div className="space-y-1">
-          <h1 className="linear-text-h2 text-linear-text-primary tracking-tight">안녕하세요, 김민준님!</h1>
+          <h1 className="linear-text-h2 text-linear-text-primary tracking-tight">안녕하세요, 양인용님!</h1>
           <p className="linear-text-small text-linear-text-tertiary">오늘도 목표를 향해 꾸준히 나아가고 있어요.</p>
         </div>
 

@@ -204,7 +204,7 @@ export default function ExamPage() {
                   'group relative flex flex-col gap-4 rounded-[12px] border p-5 text-left transition-all duration-200 shadow-[var(--shadow-level-2)]',
                   isSelected
                     ? 'border-linear-brand-indigo bg-linear-brand-indigo/10'
-                    : 'border-white/8 bg-white/2 hover:bg-white/4'
+                    : 'border-border bg-linear-bg-panel hover:bg-linear-bg-surface'
                 )}
               >
                 {/* Popular badge */}
@@ -230,7 +230,7 @@ export default function ExamPage() {
                   {cat.subjects.map((s) => (
                     <span
                       key={s}
-                      className="rounded-[4px] border border-white/8 bg-white/4 px-2 py-0.5 text-[11px] text-linear-text-tertiary"
+                      className="rounded-[4px] border border-border bg-linear-bg-surface px-2 py-0.5 text-[11px] text-linear-text-tertiary"
                     >
                       {s}
                     </span>
@@ -243,7 +243,7 @@ export default function ExamPage() {
                     'flex items-center justify-between rounded-[6px] px-3 py-2 text-sm font-medium transition-colors',
                     isSelected
                       ? 'bg-linear-brand-indigo text-white'
-                      : 'bg-white/4 text-linear-text-secondary group-hover:bg-white/8'
+                      : 'bg-linear-bg-surface text-linear-text-secondary group-hover:bg-black/3 dark:group-hover:bg-white/6'
                   )}
                 >
                   {isSelected ? '선택됨' : '선택하기'}
@@ -258,9 +258,9 @@ export default function ExamPage() {
         {selectedCategory && (
           <div
             id="exam-config"
-            className="rounded-[12px] border border-white/8 bg-white/2 p-6 space-y-6 shadow-[var(--shadow-level-2)]"
+            className="rounded-[12px] border border-border bg-linear-bg-panel p-6 space-y-6 shadow-[var(--shadow-level-2)]"
           >
-            <div className="flex items-center gap-3 border-b border-white/6 pb-4">
+            <div className="flex items-center gap-3 border-b border-border pb-4">
               <div className={cn('flex h-9 w-9 items-center justify-center rounded-[8px]', selectedCategory.iconBg)}>
                 <selectedCategory.icon className={cn('h-4.5 w-4.5', selectedCategory.iconColor)} strokeWidth={1.5} />
               </div>
@@ -287,7 +287,7 @@ export default function ExamPage() {
                         'flex items-center gap-1.5 rounded-[6px] border px-3 py-1.5 linear-text-small transition-all',
                         checked
                           ? 'border-linear-brand-indigo bg-linear-brand-indigo/10 text-linear-text-primary'
-                          : 'border-white/8 bg-transparent text-linear-text-tertiary hover:border-white/20'
+                          : 'border-border bg-transparent text-linear-text-tertiary hover:border-linear-brand-indigo/30'
                       )}
                     >
                       <CheckSquare
@@ -319,7 +319,7 @@ export default function ExamPage() {
                         'flex items-center gap-3 rounded-[8px] border p-3 text-left transition-all',
                         isActive
                           ? 'border-linear-brand-indigo bg-linear-brand-indigo/10'
-                          : 'border-white/8 bg-transparent hover:border-white/16'
+                          : 'border-border bg-transparent hover:border-linear-brand-indigo/30'
                       )}
                     >
                       <div
@@ -327,7 +327,7 @@ export default function ExamPage() {
                           'flex h-8 w-8 items-center justify-center rounded-[6px] shrink-0',
                           isActive
                             ? 'bg-linear-brand-indigo/20'
-                            : 'bg-white/4'
+                            : 'bg-linear-bg-surface'
                         )}
                       >
                         <TypeIcon
@@ -364,7 +364,7 @@ export default function ExamPage() {
                         'rounded-[6px] border px-4 py-2 linear-text-small transition-all',
                         isActive
                           ? 'border-linear-brand-indigo bg-linear-brand-indigo/10 text-linear-text-primary'
-                          : 'border-white/8 text-linear-text-tertiary hover:border-white/20 hover:text-linear-text-secondary'
+                          : 'border-border text-linear-text-tertiary hover:border-linear-brand-indigo/30 hover:text-linear-text-secondary'
                       )}
                     >
                       {opt.label}
@@ -380,7 +380,7 @@ export default function ExamPage() {
                     max={100}
                     value={config.customCount}
                     onChange={(e) => handleCustomCountChange(Number(e.target.value))}
-                    className="w-24 rounded-[6px] border border-white/12 bg-white/4 px-3 py-1.5 linear-text-small text-linear-text-primary outline-none focus:border-linear-brand-indigo transition-colors"
+                    className="w-24 rounded-[6px] border border-border bg-linear-bg-surface px-3 py-1.5 linear-text-small text-linear-text-primary outline-none focus:border-linear-brand-indigo transition-colors"
                   />
                   <span className="linear-text-small text-linear-text-tertiary">문항 (5~100)</span>
                 </div>
@@ -388,7 +388,7 @@ export default function ExamPage() {
             </div>
 
             {/* Time Limit Summary */}
-            <div className="flex items-center gap-2 rounded-[8px] bg-white/2 border border-white/6 px-4 py-3 shadow-[var(--shadow-level-1)]">
+            <div className="flex items-center gap-2 rounded-[8px] border border-border bg-linear-bg-surface px-4 py-3 shadow-[var(--shadow-level-1)]">
               <Clock className="h-4 w-4 text-linear-text-tertiary" strokeWidth={1.5} />
               <span className="linear-text-small text-linear-text-tertiary">
                 제한 시간:{' '}
