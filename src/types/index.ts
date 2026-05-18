@@ -155,3 +155,5 @@ export interface RecommendedQuestion {
   subjectName: string;
   unitName: string;
 }
+
+export * as QuestionDto from './question-dto';

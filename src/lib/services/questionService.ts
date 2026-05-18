@@ -1,6 +1,18 @@
 import type { Question, RecommendedQuestion } from '@/types';
+import type {
+  QuestionDetail,
+  QuestionPaper,
+  QuestionReview,
+  QuestionSummary,
+} from '@/types/question-dto';
 import { mockQuestions } from '@/data/mock/questions';
 import { mockRecommendations } from '@/data/mock/recommendations';
+import {
+  toQuestionDetailDto,
+  toQuestionPaperDto,
+  toQuestionReviewDto,
+  toQuestionSummaryDto,
+} from '@/lib/mappers/questionDtoMapper';
 
 const bookmarkedQuestionIds = new Set<string>(['q_ko_004', 'q_his_002', 'q_eng_003']);
 
@@ -55,5 +67,24 @@ export const questionService = {
       result = result.filter((q) => q.subjectId === subjectId);
     }
     return Promise.resolve(result);
+  },
+
+  getQuestionSummaries: async (): Promise<QuestionSummary[]> => {
+    return Promise.resolve(mockQuestions.map((question, index) => toQuestionSummaryDto(question, index)));
+  },
+
+  getQuestionPapers: async (): Promise<QuestionPaper[]> => {
+    return Promise.resolve(mockQuestions.map((question, index) => toQuestionPaperDto(question, index)));
+  },
+
+  getQuestionReviews: async (): Promise<QuestionReview[]> => {
+    return Promise.resolve(mockQuestions.map((question, index) => toQuestionReviewDto(question, index)));
+  },
+
+  getQuestionDetail: async (questionId: number): Promise<QuestionDetail | undefined> => {
+    const index = questionId - 1;
+    const question = mockQuestions[index];
+    if (!question) return Promise.resolve(undefined);
+    return Promise.resolve(toQuestionDetailDto(question, index));
   },
 };
