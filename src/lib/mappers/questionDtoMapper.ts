@@ -38,9 +38,10 @@ function buildIncorrectReasons(question: Question): Record<string, string> {
   }, {});
 }
 
-export function toQuestionPaperDto(question: Question, order: number): QuestionPaper {
+export function toQuestionPaperDto(question: Question, order?: number): QuestionPaper {
+  const questionId = order !== undefined ? order + 1 : question.questionId;
   return {
-    questionId: order + 1,
+    questionId,
     questionSetId: null,
     subject: mapSubject(question.subjectId),
     questionType: mapQuestionType(question.type),
@@ -59,11 +60,12 @@ export function toQuestionPaperDto(question: Question, order: number): QuestionP
 
 export function toQuestionSummaryDto(
   question: Question,
-  order: number,
+  order?: number,
   status: QuestionStatus = 'PUBLISHED'
 ): QuestionSummary {
+  const questionId = order !== undefined ? order + 1 : question.questionId;
   return {
-    questionId: order + 1,
+    questionId,
     questionSetId: null,
     subject: mapSubject(question.subjectId),
     questionType: mapQuestionType(question.type),
@@ -74,9 +76,10 @@ export function toQuestionSummaryDto(
   };
 }
 
-export function toQuestionReviewDto(question: Question, order: number): QuestionReview {
+export function toQuestionReviewDto(question: Question, order?: number): QuestionReview {
+  const questionId = order !== undefined ? order + 1 : question.questionId;
   return {
-    questionId: order + 1,
+    questionId,
     questionSetId: null,
     subject: mapSubject(question.subjectId),
     questionType: mapQuestionType(question.type),
@@ -100,7 +103,7 @@ export function toQuestionReviewDto(question: Question, order: number): Question
   };
 }
 
-export function toQuestionDetailDto(question: Question, order: number): QuestionDetail {
+export function toQuestionDetailDto(question: Question, order?: number): QuestionDetail {
   const review = toQuestionReviewDto(question, order);
   return {
     questionId: review.questionId,

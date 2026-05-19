@@ -140,14 +140,11 @@ export default function RecommendPage() {
 
   return (
     <div className="min-h-screen bg-linear-bg-marketing px-4 py-8 md:px-8 text-linear-text-primary">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6">
 
         {/* Header */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="bg-linear-brand-indigo/10 rounded-[6px] p-1.5 border border-linear-brand-indigo/20">
-              <Brain className="w-4 h-4 text-linear-accent-violet" strokeWidth={1.5} />
-            </div>
             <h1 className="linear-text-h2 tracking-tight text-linear-text-primary">AI 추천 문제</h1>
           </div>
           <p className="linear-text-small text-linear-text-tertiary">취약 파트 기반으로 선별된 맞춤 문제입니다</p>

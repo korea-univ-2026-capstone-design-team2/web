@@ -47,6 +47,7 @@ wiki/
 
 # Project-local preview/reference artifacts
 linear/
+api-develop/
 
 # Deployment platforms
 .vercel/

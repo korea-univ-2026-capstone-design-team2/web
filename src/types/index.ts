@@ -33,7 +33,8 @@ export type QuestionType = 'multiple_choice' | 'passage_based' | 'image_based';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export interface Question {
-  id: string;
+  questionId: number;
+  legacyId?: string;
   subjectId: string;
   unitId: string;
   type: QuestionType;
@@ -62,7 +63,7 @@ export interface ExamConfig {
 }
 
 export interface QuestionState {
-  questionId: string;
+  questionId: number;
   selectedAnswer?: number;
   isBookmarked: boolean;
   isUnknown: boolean;

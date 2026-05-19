@@ -1,9 +1,9 @@
 import type { RecommendedQuestion } from '@/types';
 import { mockQuestions } from './questions';
 
-const findQuestion = (id: string) => {
-  const q = mockQuestions.find((q) => q.id === id);
-  if (!q) throw new Error(`Question ${id} not found in mock data`);
+const findQuestion = (legacyId: string) => {
+  const q = mockQuestions.find((question) => question.legacyId === legacyId);
+  if (!q) throw new Error(`Question ${legacyId} not found in mock data`);
   return q;
 };
 

@@ -117,6 +117,10 @@ function getActivityColor(count: number): string {
 function CalendarHeatmap() {
   const weeks = 52;
   const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
+  const cellSize = 11;
+  const cellGap = 2;
+  const weekWidth = cellSize + cellGap;
+  const gridWidth = weeks * weekWidth - cellGap;
 
   // Generate month labels
   const today = new Date();
@@ -138,23 +142,13 @@ function CalendarHeatmap() {
     <div className="overflow-x-auto pb-2">
       <div className="min-w-[680px]">
         {/* Month labels */}
-        <div className="flex mb-1 ml-8">
-          {monthLabels.map(({ label, weekIndex }) => (
-            <div
-              key={`${label}-${weekIndex}`}
-              className="absolute text-[10px] text-linear-text-quaternary"
-              style={{ left: `calc(${(weekIndex / weeks) * 100}% + 2rem)` }}
-            >
-              {label}
-            </div>
-          ))}
-          {/* Static month labels via flex */}
-          <div className="relative flex" style={{ width: `${weeks * 14}px` }}>
+        <div className="mb-1 ml-8">
+          <div className="relative h-4" style={{ width: `${gridWidth}px` }}>
             {monthLabels.map(({ label, weekIndex }) => (
               <span
                 key={`month-${weekIndex}-${label}`}
                 className="absolute text-[10px] text-linear-text-quaternary"
-                style={{ left: `${weekIndex * 14}px` }}
+                style={{ left: `${weekIndex * weekWidth}px` }}
               >
                 {label}
               </span>
@@ -250,8 +244,8 @@ function ToggleSwitch({
 
 export default function MyPage() {
   return (
-    <div className="min-h-screen bg-linear-bg-marketing text-linear-text-primary">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 space-y-8">
+    <div className="min-h-screen bg-linear-bg-marketing px-4 py-8 text-linear-text-primary md:px-8">
+      <div className="mx-auto max-w-6xl space-y-8">
         {/* Page Header */}
         <div>
           <h1 className="linear-text-h2 text-linear-text-primary mb-1">마이페이지</h1>

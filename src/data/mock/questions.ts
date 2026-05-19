@@ -1,7 +1,9 @@
 import type { Question } from '@/types';
 
+type QuestionSeed = Omit<Question, 'questionId' | 'legacyId'> & { id: string };
+
 // ========== 국어 문제 ==========
-const 국어Questions: Question[] = [
+const 국어Questions: QuestionSeed[] = [
   {
     id: 'q_ko_001',
     subjectId: '국어',
@@ -240,7 +242,7 @@ const 국어Questions: Question[] = [
 ];
 
 // ========== 한국사 문제 ==========
-const 한국사Questions: Question[] = [
+const 한국사Questions: QuestionSeed[] = [
   {
     id: 'q_his_001',
     subjectId: '한국사',
@@ -474,7 +476,7 @@ const 한국사Questions: Question[] = [
 ];
 
 // ========== 영어 문제 ==========
-const 영어Questions: Question[] = [
+const 영어Questions: QuestionSeed[] = [
   {
     id: 'q_eng_001',
     subjectId: '영어',
@@ -708,8 +710,10 @@ const 영어Questions: Question[] = [
   },
 ];
 
-export const mockQuestions: Question[] = [
-  ...국어Questions,
-  ...한국사Questions,
-  ...영어Questions,
-];
+export const mockQuestions: Question[] = [...국어Questions, ...한국사Questions, ...영어Questions].map(
+  ({ id, ...question }, index) => ({
+    ...question,
+    questionId: index + 1,
+    legacyId: id,
+  }),
+);

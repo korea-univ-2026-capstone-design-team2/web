@@ -15,7 +15,7 @@ function calculateExamResult(session: ExamSession): ExamResult {
   const subjectMap = new Map<string, { correct: number; total: number; name: string }>();
 
   for (const q of questions) {
-    const state = questionStates.find((s) => s.questionId === q.id);
+    const state = questionStates.find((s) => s.questionId === q.questionId);
     const isCorrect = state?.selectedAnswer === q.correctAnswer;
 
     if (isCorrect) correctCount++;

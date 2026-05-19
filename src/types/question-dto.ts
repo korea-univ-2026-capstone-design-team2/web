@@ -28,7 +28,7 @@ export type TopicCategory =
   | 'CULTURE'
   | 'ENVIRONMENT';
 
-export type QuestionStatus = 'DRAFT' | 'APPROVED' | 'PUBLISHED' | 'ARCHIVED' | (string & {});
+export type QuestionStatus = 'DRAFT' | 'PUBLISHED' | 'REJECTED' | (string & {});
 
 export interface AnswerChoice {
   number: number;

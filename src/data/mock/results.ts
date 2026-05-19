@@ -33,7 +33,7 @@ export const mockResults: ExamResult[] = [
     sessionId: 'session_001',
     examConfig: buildExamConfig('config_001', ['국어', '한국사', '영어'], exam1Questions),
     questionStates: exam1Questions.map((q, i) => ({
-      questionId: q.id,
+      questionId: q.questionId,
       selectedAnswer: i % 4 === 0 ? q.correctAnswer + 1 > 5 ? 1 : q.correctAnswer + 1 : q.correctAnswer,
       isBookmarked: i === 2 || i === 7,
       isUnknown: false,
@@ -57,7 +57,7 @@ export const mockResults: ExamResult[] = [
     sessionId: 'session_002',
     examConfig: buildExamConfig('config_002', ['국어', '한국사', '영어'], exam2Questions),
     questionStates: exam2Questions.map((q, i) => ({
-      questionId: q.id,
+      questionId: q.questionId,
       selectedAnswer: i % 3 === 0 ? q.correctAnswer + 1 > 5 ? 1 : q.correctAnswer + 1 : q.correctAnswer,
       isBookmarked: i === 1,
       isUnknown: i === 4,
@@ -81,7 +81,7 @@ export const mockResults: ExamResult[] = [
     sessionId: 'session_003',
     examConfig: buildExamConfig('config_003', ['국어', '한국사', '영어'], exam3Questions),
     questionStates: exam3Questions.map((q, i) => ({
-      questionId: q.id,
+      questionId: q.questionId,
       selectedAnswer: i % 5 === 0 ? q.correctAnswer + 1 > 5 ? 1 : q.correctAnswer + 1 : q.correctAnswer,
       isBookmarked: false,
       isUnknown: i === 3 || i === 8,
@@ -105,7 +105,7 @@ export const mockResults: ExamResult[] = [
     sessionId: 'session_004',
     examConfig: buildExamConfig('config_004', ['국어', '한국사', '영어'], exam4Questions),
     questionStates: exam4Questions.map((q, i) => ({
-      questionId: q.id,
+      questionId: q.questionId,
       selectedAnswer: i % 2 === 0 ? q.correctAnswer : q.correctAnswer + 1 > 5 ? 1 : q.correctAnswer + 1,
       isBookmarked: i === 0 || i === 5 || i === 10,
       isUnknown: false,
@@ -129,7 +129,7 @@ export const mockResults: ExamResult[] = [
     sessionId: 'session_005',
     examConfig: buildExamConfig('config_005', ['국어', '한국사', '영어'], exam5Questions),
     questionStates: exam5Questions.map((q, i) => ({
-      questionId: q.id,
+      questionId: q.questionId,
       selectedAnswer: i % 5 !== 0 ? q.correctAnswer : q.correctAnswer + 1 > 5 ? 1 : q.correctAnswer + 1,
       isBookmarked: i === 6,
       isUnknown: false,

@@ -11,20 +11,20 @@ interface ExamStore {
   isSubmitting: boolean;
 
   startExam: (config: ExamConfig) => void;
-  answerQuestion: (questionId: string, answer: number) => void;
-  toggleBookmark: (questionId: string) => void;
-  toggleUnknown: (questionId: string) => void;
+  answerQuestion: (questionId: number, answer: number) => void;
+  toggleBookmark: (questionId: number) => void;
+  toggleUnknown: (questionId: number) => void;
   nextQuestion: () => void;
   prevQuestion: () => void;
   setCurrentQuestion: (index: number) => void;
   submitExam: () => Promise<ExamResult | null>;
   resetExam: () => void;
-  updateTimeSpent: (questionId: string, seconds: number) => void;
+  updateTimeSpent: (questionId: number, seconds: number) => void;
 }
 
 function createInitialQuestionStates(config: ExamConfig): QuestionState[] {
   return config.questions.map((q) => ({
-    questionId: q.id,
+    questionId: q.questionId,
     selectedAnswer: undefined,
     isBookmarked: false,
     isUnknown: false,
@@ -49,7 +49,7 @@ export const useExamStore = create<ExamStore>((set, get) => ({
     set({ currentSession: session, currentQuestionIndex: 0, lastResult: null });
   },
 
-  answerQuestion: (questionId: string, answer: number) => {
+  answerQuestion: (questionId: number, answer: number) => {
     const { currentSession } = get();
     if (!currentSession) return;
 
@@ -62,7 +62,7 @@ export const useExamStore = create<ExamStore>((set, get) => ({
     });
   },
 
-  toggleBookmark: (questionId: string) => {
+  toggleBookmark: (questionId: number) => {
     const { currentSession } = get();
     if (!currentSession) return;
 
@@ -77,7 +77,7 @@ export const useExamStore = create<ExamStore>((set, get) => ({
     });
   },
 
-  toggleUnknown: (questionId: string) => {
+  toggleUnknown: (questionId: number) => {
     const { currentSession } = get();
     if (!currentSession) return;
 
@@ -145,7 +145,7 @@ export const useExamStore = create<ExamStore>((set, get) => ({
     }
   },
 
-  updateTimeSpent: (questionId: string, seconds: number) => {
+  updateTimeSpent: (questionId: number, seconds: number) => {
     const { currentSession } = get();
     if (!currentSession) return;
 

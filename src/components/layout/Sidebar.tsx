@@ -8,6 +8,8 @@ import {
   BarChart2,
   Sparkles,
   User,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 
@@ -27,9 +29,11 @@ const NAV_ITEMS: NavItem[] = [
 
 interface SidebarProps {
   onNavClick?: () => void
+  collapsed?: boolean
+  onToggleCollapse?: () => void
 }
 
-export function Sidebar({ onNavClick }: SidebarProps) {
+export function Sidebar({ onNavClick, collapsed = false, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname()
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
@@ -37,23 +41,49 @@ export function Sidebar({ onNavClick }: SidebarProps) {
   return (
     <aside className="flex flex-col h-full w-full bg-linear-bg-panel border-r border-border">
       {/* Logo */}
-      <div className="px-4 py-5 border-b border-border">
-        <Link href="/dashboard" className="flex items-center gap-2" onClick={onNavClick}>
-          <span className="text-linear-brand-indigo font-semibold text-lg tracking-tight select-none lowercase">
-            oh-my-study
-          </span>
-        </Link>
+      <div className={['border-b border-border', collapsed ? 'px-2 py-4' : 'px-4 py-5'].join(' ')}>
+        <div className={['flex items-center', collapsed ? 'justify-center' : 'justify-between gap-2'].join(' ')}>
+          <Link href="/dashboard" className="flex items-center gap-2" onClick={onNavClick}>
+            {!collapsed && (
+              <span className="text-linear-brand-indigo font-semibold text-lg tracking-tight select-none lowercase">
+                oh-my-study
+              </span>
+            )}
+            {collapsed && (
+              <span className="text-linear-brand-indigo font-semibold text-base tracking-tight select-none">
+                oms
+              </span>
+            )}
+          </Link>
+
+          {onToggleCollapse && (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className={[
+                'hidden lg:flex items-center justify-center rounded-[6px] text-linear-text-tertiary hover:text-linear-text-secondary hover:bg-black/5 dark:hover:bg-white/8 transition-colors duration-150',
+                collapsed ? 'h-8 w-8' : 'h-8 w-8',
+              ].join(' ')}
+              aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'}
+              title={collapsed ? '사이드바 펼치기' : '사이드바 접기'}
+            >
+              {collapsed ? <PanelLeftOpen size={16} strokeWidth={1.5} /> : <PanelLeftClose size={16} strokeWidth={1.5} />}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
+      <nav className={['flex-1 overflow-y-auto py-3 space-y-0.5', collapsed ? 'px-1.5' : 'px-2'].join(' ')}>
         {NAV_ITEMS.map(({ label, href, icon: Icon }) => (
           <Link
             key={href}
             href={href}
             onClick={onNavClick}
+            title={collapsed ? label : undefined}
             className={[
-              'flex items-center gap-3 px-3 py-2 rounded-[6px] text-sm transition-colors duration-150',
+              'flex items-center rounded-[6px] text-sm transition-colors duration-150',
+              collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2',
               isActive(href)
                 ? 'bg-black/5 dark:bg-white/8 text-linear-text-primary font-medium'
                 : 'text-linear-text-tertiary hover:text-linear-text-secondary hover:bg-black/4 dark:hover:bg-white/6',
@@ -64,26 +94,28 @@ export function Sidebar({ onNavClick }: SidebarProps) {
               className={isActive(href) ? 'text-linear-accent-violet' : 'text-current'}
               strokeWidth={isActive(href) ? 1.75 : 1.5}
             />
-            {label}
+            {!collapsed && label}
           </Link>
         ))}
       </nav>
 
       {/* Bottom section */}
-      <div className="px-2 py-3 border-t border-border space-y-0.5">
+      <div className={['py-3 border-t border-border space-y-0.5', collapsed ? 'px-1.5' : 'px-2'].join(' ')}>
         {/* User info */}
-        <div className="flex items-center gap-3 px-3 py-2 mt-1">
+        <div className={['flex items-center mt-1', collapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-2'].join(' ')}>
           <div className="w-7 h-7 rounded-full bg-linear-brand-indigo flex items-center justify-center flex-shrink-0">
             <User size={14} className="text-white" />
           </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-linear-text-secondary text-xs font-medium truncate">사용자</span>
-            <span className="text-linear-text-quaternary text-[11px] truncate">user@example.com</span>
-          </div>
+          {!collapsed && (
+            <div className="flex flex-col min-w-0">
+              <span className="text-linear-text-secondary text-xs font-medium truncate">사용자</span>
+              <span className="text-linear-text-quaternary text-[11px] truncate">user@example.com</span>
+            </div>
+          )}
         </div>
 
-        <div className="px-3 pt-1.5">
-          <ThemeToggle className="w-full rounded-[8px] justify-center" />
+        <div className={collapsed ? 'pt-1.5 flex justify-center' : 'px-3 pt-1.5'}>
+          <ThemeToggle className={collapsed ? '' : 'w-full rounded-[8px] justify-center'} />
         </div>
       </div>
     </aside>
