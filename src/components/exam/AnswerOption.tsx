@@ -39,7 +39,7 @@ export default function AnswerOption({
             ? 'border-linear-status-emerald bg-linear-status-emerald/10'
             : isWrongAnswer
               ? 'border-red-500 bg-red-500/10'
-              : 'border-border bg-linear-bg-surface'
+              : 'border-border bg-white'
         )}
       >
         <span
@@ -84,7 +84,7 @@ export default function AnswerOption({
         'flex w-full items-start gap-3 rounded-[8px] border px-4 py-3 text-left transition-all duration-150',
         isSelected
           ? 'border-linear-brand-indigo bg-linear-brand-indigo/10'
-          : 'border-border bg-linear-bg-surface hover:border-linear-brand-indigo/30 hover:bg-black/3 dark:hover:bg-white/6'
+          : 'border-border bg-white hover:border-linear-brand-indigo/30 hover:bg-black/3 dark:hover:bg-white/6'
       )}
     >
       <span

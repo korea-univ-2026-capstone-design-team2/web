@@ -107,9 +107,9 @@ export default function ExamSessionPage() {
 
   function renderOmrPanel() {
     return (
-      <div className="flex h-full flex-col rounded-[12px] border border-border bg-linear-bg-panel shadow-[var(--shadow-level-2)]">
+      <div className="flex h-full flex-col rounded-[12px] border border-border bg-white shadow-[var(--shadow-level-2)]">
         <div className="border-b border-border px-4 py-4">
-          <div className="rounded-[10px] border border-border bg-linear-bg-surface px-3 py-3">
+          <div className="rounded-[10px] border border-border bg-white px-3 py-3">
             <div className="text-xs text-linear-text-tertiary">제한 시간</div>
             <div className="mt-0.5 flex items-center gap-2 text-sm font-semibold text-linear-text-secondary">
               <Clock className="h-4 w-4 text-linear-text-tertiary" />
@@ -127,7 +127,7 @@ export default function ExamSessionPage() {
             </div>
           </div>
 
-          <div className="mt-3 rounded-[10px] border border-border bg-linear-bg-surface px-3 py-3 text-sm">
+          <div className="mt-3 rounded-[10px] border border-border bg-white px-3 py-3 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-linear-text-tertiary">전체 문제</span>
               <span className="font-semibold text-linear-text-primary">{total}</span>
@@ -158,7 +158,7 @@ export default function ExamSessionPage() {
                     'grid grid-cols-[32px_1fr] items-center gap-2 rounded-[8px] border px-2 py-1.5 transition-colors',
                     isCurrent
                       ? 'border-linear-brand-indigo/40 bg-linear-brand-indigo/8'
-                      : 'border-border bg-linear-bg-surface'
+                      : 'border-border bg-white'
                   )}
                 >
                   <button
@@ -188,7 +188,7 @@ export default function ExamSessionPage() {
                             'flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-semibold transition-colors',
                             checked
                               ? 'border-linear-brand-indigo bg-linear-brand-indigo text-white'
-                              : 'border-border bg-linear-bg-surface text-linear-text-tertiary hover:border-linear-brand-indigo/40 hover:text-linear-text-secondary'
+                              : 'border-border bg-white text-linear-text-tertiary hover:border-linear-brand-indigo/40 hover:text-linear-text-secondary'
                           )}
                         >
                           {choice}
@@ -216,9 +216,9 @@ export default function ExamSessionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-bg-marketing px-4 py-8 text-linear-text-primary md:px-8">
+    <div className="min-h-screen bg-white px-4 py-8 text-linear-text-primary md:px-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-4">
-        <header className="rounded-[12px] border border-border bg-linear-bg-panel px-4 py-3 shadow-[var(--shadow-level-1)]">
+        <header className="rounded-[12px] border border-border bg-white px-4 py-3 shadow-[var(--shadow-level-1)]">
           <div className="flex flex-wrap items-center gap-3">
             <div>
               <p className="text-xs text-linear-text-tertiary">실전 응시</p>
@@ -226,7 +226,7 @@ export default function ExamSessionPage() {
             </div>
 
             {papers[currentIndex] && (
-              <div className="rounded-[8px] border border-border bg-linear-bg-surface px-3 py-1.5 text-xs text-linear-text-tertiary">
+              <div className="rounded-[8px] border border-border bg-white px-3 py-1.5 text-xs text-linear-text-tertiary">
                 {SUBJECT_LABEL[papers[currentIndex].subject]} · {QUESTION_TYPE_LABEL[papers[currentIndex].questionType]} ·{' '}
                 {DIFFICULTY_LABEL[papers[currentIndex].difficulty]}
               </div>
@@ -238,7 +238,7 @@ export default function ExamSessionPage() {
                   'rounded-[8px] border px-3 py-1.5 text-sm font-semibold tabular-nums',
                   isLowTime
                     ? 'border-red-500/25 bg-red-500/8 text-red-500'
-                    : 'border-border bg-linear-bg-surface text-linear-accent-violet'
+                    : 'border-border bg-white text-linear-accent-violet'
                 )}
               >
                 남은 시간 {formatTime(timeLeft)}
@@ -246,7 +246,7 @@ export default function ExamSessionPage() {
               <button
                 type="button"
                 onClick={() => setIsOmrPanelOpen(true)}
-                className="rounded-[8px] border border-border bg-linear-bg-surface px-3 py-1.5 text-xs text-linear-text-secondary lg:hidden"
+                className="rounded-[8px] border border-border bg-white px-3 py-1.5 text-xs text-linear-text-secondary lg:hidden"
               >
                 OMR 보기
               </button>
@@ -255,7 +255,7 @@ export default function ExamSessionPage() {
         </header>
 
         <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <main className="rounded-[12px] border border-border bg-linear-bg-panel shadow-[var(--shadow-level-2)]">
+          <main className="rounded-[12px] border border-border bg-white shadow-[var(--shadow-level-2)]">
             <div className="border-b border-border px-5 py-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-linear-text-tertiary">
@@ -280,7 +280,7 @@ export default function ExamSessionPage() {
                       'rounded-[12px] border p-4 md:p-5',
                       isCurrent
                         ? 'border-linear-brand-indigo/35 bg-linear-brand-indigo/6'
-                        : 'border-border bg-linear-bg-surface'
+                        : 'border-border bg-white'
                     )}
                   >
                     <QuestionCard
@@ -298,7 +298,7 @@ export default function ExamSessionPage() {
                 type="button"
                 onClick={() => movePage('prev')}
                 disabled={pageStart === 0}
-                className="inline-flex items-center gap-1.5 rounded-[8px] border border-border bg-linear-bg-surface px-3 py-2 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/6"
+                className="inline-flex items-center gap-1.5 rounded-[8px] border border-border bg-white px-3 py-2 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/6"
               >
                 <ChevronLeft className="h-4 w-4" />
                 이전 묶음
@@ -308,7 +308,7 @@ export default function ExamSessionPage() {
                 type="button"
                 onClick={() => movePage('next')}
                 disabled={pageStart + QUESTIONS_PER_VIEW >= total}
-                className="inline-flex items-center gap-1.5 rounded-[8px] border border-border bg-linear-bg-surface px-3 py-2 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/6"
+                className="inline-flex items-center gap-1.5 rounded-[8px] border border-border bg-white px-3 py-2 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/6"
               >
                 다음 묶음
                 <ChevronRight className="h-4 w-4" />
@@ -321,7 +321,7 @@ export default function ExamSessionPage() {
       </div>
 
       <Sheet open={isOmrPanelOpen} onOpenChange={setIsOmrPanelOpen}>
-        <SheetContent side="bottom" className="max-h-[85vh] overflow-hidden rounded-t-[16px] border-t border-border bg-linear-bg-marketing p-0">
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-hidden rounded-t-[16px] border-t border-border bg-white p-0">
           <SheetHeader className="border-b border-border px-4 py-3">
             <SheetTitle className="text-linear-text-primary">OMR 답안 표기란</SheetTitle>
           </SheetHeader>
@@ -330,7 +330,7 @@ export default function ExamSessionPage() {
       </Sheet>
 
       <Dialog open={isSubmitModalOpen} onOpenChange={setIsSubmitModalOpen}>
-        <DialogContent className="border border-border bg-linear-bg-panel text-linear-text-primary sm:max-w-md">
+        <DialogContent className="border border-border bg-white text-linear-text-primary sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-linear-text-primary">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
@@ -346,7 +346,7 @@ export default function ExamSessionPage() {
                 <span className="text-xs text-linear-text-tertiary">답변 완료</span>
                 <p className="mt-1 text-2xl font-bold text-linear-text-primary">{answeredCount}</p>
               </div>
-              <div className="rounded-[8px] border border-border bg-linear-bg-surface p-3 text-center">
+              <div className="rounded-[8px] border border-border bg-white p-3 text-center">
                 <span className="text-xs text-linear-text-tertiary">미응답</span>
                 <p className="mt-1 text-2xl font-bold text-red-500">{unansweredCount}</p>
               </div>
@@ -357,7 +357,7 @@ export default function ExamSessionPage() {
             <button
               type="button"
               onClick={() => setIsSubmitModalOpen(false)}
-              className="flex-1 rounded-[8px] border border-border bg-linear-bg-surface py-2.5 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 dark:hover:bg-white/6"
+              className="flex-1 rounded-[8px] border border-border bg-white py-2.5 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 dark:hover:bg-white/6"
             >
               계속 풀기
             </button>

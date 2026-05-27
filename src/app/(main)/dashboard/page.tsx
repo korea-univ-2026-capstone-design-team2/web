@@ -88,7 +88,7 @@ export default function DashboardPage() {
   const trendData = useMemo(() => generate30DaysData(), []);
 
   return (
-    <div className="min-h-screen bg-linear-bg-marketing px-4 py-8 md:px-8 text-linear-text-primary">
+    <div className="min-h-screen bg-white px-4 py-8 md:px-8 text-linear-text-primary">
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* Header Greeting */}
@@ -98,7 +98,7 @@ export default function DashboardPage() {
         </div>
 
         {/* AI Recommendation Banner */}
-        <div className="bg-white/2 border border-white/8 rounded-[12px] p-4 flex gap-4 shadow-[var(--shadow-level-2)]">
+        <div className="bg-white border border-border rounded-[12px] p-4 flex gap-4 shadow-[var(--shadow-level-2)]">
           <div className="w-1 rounded-full bg-linear-brand-indigo flex-shrink-0" />
           <div className="space-y-0.5">
             <p className="text-xs font-medium uppercase tracking-wide text-linear-text-tertiary">AI 추천</p>
@@ -117,7 +117,7 @@ export default function DashboardPage() {
             return (
               <div
                 key={card.label}
-                className="bg-white/2 border border-white/8 rounded-[12px] p-5 space-y-3 shadow-[var(--shadow-level-2)]"
+                className="bg-white border border-border rounded-[12px] p-5 space-y-3 shadow-[var(--shadow-level-2)]"
               >
                 <div className="flex items-center justify-between">
                   <div className={`${card.iconBg} rounded-[6px] p-2`}>
@@ -157,7 +157,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Results */}
-        <div className="bg-white/2 border border-white/8 rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
+        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
           <div className="flex items-center justify-between mb-4">
             <h3 className="linear-text-body-medium text-linear-text-primary">최근 응시 결과</h3>
             <Link
@@ -173,7 +173,7 @@ export default function DashboardPage() {
             {recentResults.map((result) => (
               <div
                 key={result.id}
-                className="flex items-center gap-3 p-3 rounded-[8px] hover:bg-white/4 transition-colors group border border-transparent hover:border-white/8"
+                className="flex items-center gap-3 p-3 rounded-[8px] hover:bg-black/2 transition-colors group border border-transparent hover:border-border dark:hover:bg-white/6"
               >
                 <div
                   className={`w-2 h-2 rounded-full flex-shrink-0 ${
@@ -223,7 +223,7 @@ export default function DashboardPage() {
           </Link>
           <Link
             href="/recommend"
-            className="flex-1 flex items-center justify-center gap-2 rounded-[8px] border border-border bg-white/70 px-6 py-3 text-sm font-medium text-linear-text-secondary transition-colors hover:bg-white/90 dark:border-white/8 dark:bg-white/2 dark:hover:bg-white/5"
+            className="flex-1 flex items-center justify-center gap-2 rounded-[8px] border border-border bg-white px-6 py-3 text-sm font-medium text-linear-text-secondary transition-colors hover:bg-black/3 dark:border-white/8 dark:bg-white/2 dark:hover:bg-white/5"
           >
             취약파트 풀기
             <ArrowRight className="w-4 h-4" strokeWidth={1.5} />

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Zap, Brain } from 'lucide-react';
+import { ArrowRight, Zap } from 'lucide-react';
 
 // --- Inline Mock Data ---
 interface Question {
@@ -139,7 +139,7 @@ export default function RecommendPage() {
         );
 
   return (
-    <div className="min-h-screen bg-linear-bg-marketing px-4 py-8 md:px-8 text-linear-text-primary">
+    <div className="min-h-screen bg-white px-4 py-8 md:px-8 text-linear-text-primary">
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* Header */}
@@ -173,7 +173,7 @@ export default function RecommendPage() {
                 className={`flex-shrink-0 px-3.5 py-1.5 rounded-full linear-text-small font-medium transition-colors ${
                   isActive
                     ? 'bg-linear-brand-indigo text-white border border-linear-brand-indigo'
-                    : 'border border-white/8 text-linear-text-tertiary hover:bg-white/4 hover:text-linear-text-secondary'
+                    : 'border border-border bg-white text-linear-text-tertiary hover:bg-black/3 hover:text-linear-text-secondary dark:hover:bg-white/6'
                 }`}
               >
                 {filter}
@@ -196,7 +196,7 @@ export default function RecommendPage() {
             return (
               <div
                 key={question.id}
-                className="bg-white/2 border border-white/8 rounded-[12px] p-5 hover:bg-white/4 hover:border-white/16 transition-all shadow-[var(--shadow-level-1)] hover:shadow-[var(--shadow-level-2)]"
+                className="bg-white border border-border rounded-[12px] p-5 hover:bg-black/2 transition-all shadow-[var(--shadow-level-1)] hover:shadow-[var(--shadow-level-2)] dark:hover:bg-white/6"
               >
                 {/* Top row */}
                 <div className="flex items-start justify-between gap-3 mb-3">
@@ -210,7 +210,7 @@ export default function RecommendPage() {
                     <span className={`text-[11px] font-medium px-2 py-0.5 rounded-[4px] border border-transparent ${diff.className}`}>
                       난이도 {diff.label}
                     </span>
-                    <span className="bg-white/4 border border-white/8 text-linear-text-tertiary text-[11px] px-2 py-0.5 rounded-[4px]">
+                    <span className="bg-white border border-border text-linear-text-tertiary text-[11px] px-2 py-0.5 rounded-[4px]">
                       {question.unit}
                     </span>
                   </div>

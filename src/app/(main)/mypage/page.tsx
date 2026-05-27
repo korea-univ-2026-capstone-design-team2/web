@@ -227,7 +227,7 @@ function ToggleSwitch({
         className={`relative inline-flex h-5 w-9 items-center rounded-full border transition-colors focus:outline-none ${
           checked
             ? "border-linear-brand-indigo bg-linear-brand-indigo"
-            : "border-border bg-linear-bg-surface dark:border-white/12 dark:bg-white/10"
+            : "border-border bg-white dark:border-white/12 dark:bg-white/10"
         }`}
       >
         <span
@@ -244,7 +244,7 @@ function ToggleSwitch({
 
 export default function MyPage() {
   return (
-    <div className="min-h-screen bg-linear-bg-marketing px-4 py-8 text-linear-text-primary md:px-8">
+    <div className="min-h-screen bg-white px-4 py-8 text-linear-text-primary md:px-8">
       <div className="mx-auto max-w-6xl space-y-8">
         {/* Page Header */}
         <div>
@@ -253,7 +253,7 @@ export default function MyPage() {
         </div>
 
         {/* Profile Card */}
-        <div className="bg-white/2 border border-white/8 rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
+        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
           <div className="flex flex-col sm:flex-row sm:items-start gap-6">
             {/* Avatar */}
             <div className="h-16 w-16 rounded-full bg-linear-brand-indigo/10 border border-linear-brand-indigo/20 flex items-center justify-center flex-shrink-0">
@@ -271,12 +271,12 @@ export default function MyPage() {
                       <Target size={14} strokeWidth={1.5} />
                       목표 시험: {mockUser.targetExam}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 linear-text-label text-linear-text-tertiary bg-white/4 border border-white/8 rounded-full px-3 py-1">
+                    <span className="inline-flex items-center gap-1.5 linear-text-label text-linear-text-tertiary bg-white border border-border rounded-full px-3 py-1">
                       목표 점수: {mockUser.targetScore}점
                     </span>
                   </div>
                 </div>
-                <button className="flex items-center gap-1.5 text-xs font-signature text-linear-text-tertiary bg-white/2 border border-white/8 rounded-[6px] px-3 py-2 hover:bg-white/5 hover:text-linear-text-secondary transition-colors flex-shrink-0">
+                <button className="flex items-center gap-1.5 text-xs font-signature text-linear-text-tertiary bg-white border border-border rounded-[6px] px-3 py-2 hover:bg-black/3 hover:text-linear-text-secondary transition-colors flex-shrink-0 dark:hover:bg-white/6">
                   <Pencil size={14} strokeWidth={1.5} />
                   프로필 수정
                 </button>
@@ -292,7 +292,7 @@ export default function MyPage() {
             return (
               <div
                 key={stat.label}
-                className="bg-white/2 border border-white/8 rounded-[12px] p-5 shadow-[var(--shadow-level-2)]"
+                className="bg-white border border-border rounded-[12px] p-5 shadow-[var(--shadow-level-2)]"
               >
                 <div
                   className={`h-8 w-8 rounded-[8px] ${stat.bgColor} flex items-center justify-center mb-4`}
@@ -312,7 +312,7 @@ export default function MyPage() {
         </div>
 
         {/* Learning Calendar */}
-        <div className="bg-white/2 border border-white/8 rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
+        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="linear-text-body-medium text-linear-text-primary">학습 캘린더</h2>
@@ -330,7 +330,7 @@ export default function MyPage() {
         </div>
 
         {/* Bookmarks */}
-        <div className="bg-white/2 border border-white/8 rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
+        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="linear-text-body-medium text-linear-text-primary">북마크된 문제</h2>
@@ -346,7 +346,7 @@ export default function MyPage() {
             {mockBookmarks.map((bookmark) => (
               <div
                 key={bookmark.id}
-                className="flex items-start justify-between gap-4 p-4 bg-white/2 border border-white/8 rounded-[8px] hover:bg-white/4 hover:border-white/12 transition-all group shadow-[var(--shadow-level-2)]"
+                className="flex items-start justify-between gap-4 p-4 bg-white border border-border rounded-[8px] hover:bg-black/2 transition-all group shadow-[var(--shadow-level-2)] dark:hover:bg-white/6"
               >
                 <div className="flex items-start gap-3 min-w-0">
                   <BookMarked size={16} strokeWidth={1.5} className="text-linear-accent-violet flex-shrink-0 mt-0.5" />
@@ -362,7 +362,7 @@ export default function MyPage() {
                     </div>
                   </div>
                 </div>
-                <button className="flex-shrink-0 linear-text-label text-linear-text-tertiary border border-white/8 rounded-[6px] px-3 py-1.5 hover:text-linear-text-primary hover:border-white/15 hover:bg-white/5 transition-colors whitespace-nowrap shadow-[var(--shadow-level-1)]">
+                <button className="flex-shrink-0 linear-text-label text-linear-text-tertiary border border-border rounded-[6px] px-3 py-1.5 hover:text-linear-text-primary hover:bg-black/3 transition-colors whitespace-nowrap shadow-[var(--shadow-level-1)] dark:hover:bg-white/6">
                   풀기
                 </button>
               </div>
@@ -371,11 +371,11 @@ export default function MyPage() {
         </div>
 
         {/* Settings */}
-        <div className="bg-white/2 border border-white/8 rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
+        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
           <h2 className="linear-text-body-medium text-linear-text-primary mb-1">알림 설정</h2>
           <p className="linear-text-small text-linear-text-quaternary mb-6">알림 수신 방법을 설정하세요</p>
 
-          <div className="divide-y divide-white/8">
+          <div className="divide-y divide-border">
             <div className="flex items-center justify-between py-4">
               <div className="flex items-center gap-4">
                 <div className="h-9 w-9 rounded-[8px] bg-linear-brand-indigo/10 flex items-center justify-center">
@@ -427,7 +427,7 @@ function ToggleSwitchInline({ defaultChecked = false }: { defaultChecked?: boole
       className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full border transition-colors focus:outline-none ${
         checked
           ? "border-linear-brand-indigo bg-linear-brand-indigo"
-          : "border-border bg-linear-bg-surface dark:border-white/12 dark:bg-white/10"
+          : "border-border bg-white dark:border-white/12 dark:bg-white/10"
       }`}
     >
       <span

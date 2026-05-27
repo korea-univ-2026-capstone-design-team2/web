@@ -49,11 +49,6 @@ export function Sidebar({ onNavClick, collapsed = false, onToggleCollapse }: Sid
                 oh-my-study
               </span>
             )}
-            {collapsed && (
-              <span className="text-linear-brand-indigo font-semibold text-base tracking-tight select-none">
-                oms
-              </span>
-            )}
           </Link>
 
           {onToggleCollapse && (

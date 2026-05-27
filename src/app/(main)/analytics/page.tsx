@@ -174,7 +174,7 @@ export default function AnalyticsPage() {
   const trendData = useMemo(() => generate30DaysMultiData(), []);
 
   return (
-    <div className="min-h-screen bg-linear-bg-marketing px-4 py-8 md:px-8 text-linear-text-primary">
+    <div className="min-h-screen bg-white px-4 py-8 md:px-8 text-linear-text-primary">
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* Page Title */}
@@ -196,7 +196,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Heatmap */}
-        <div className="bg-white/70 border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)] overflow-hidden dark:bg-white/2 dark:border-white/8">
+        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)] overflow-hidden dark:bg-white/2 dark:border-white/8">
           <div className="mb-4">
             <h3 className="linear-text-body-medium text-linear-text-primary">파트별 취약도 히트맵</h3>
             <p className="linear-text-caption text-linear-text-quaternary mt-1">각 셀의 색상은 정답률을 나타냅니다 — 빨강(낮음) → 노랑 → 초록(높음)</p>
@@ -255,7 +255,7 @@ export default function AnalyticsPage() {
         />
 
         {/* Top 5 Weakness */}
-        <div className="bg-white/70 border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)] dark:bg-white/2 dark:border-white/8">
+        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)] dark:bg-white/2 dark:border-white/8">
           <h3 className="linear-text-body-medium text-linear-text-primary mb-4">취약 파트 TOP 5</h3>
           <div className="space-y-3">
             {weaknessList.map((item) => {
@@ -265,7 +265,7 @@ export default function AnalyticsPage() {
                   key={item.rank}
                   className="flex items-start gap-4 rounded-[6px] border border-transparent p-3 transition-colors hover:bg-black/3 hover:border-border dark:hover:bg-white/6 dark:hover:border-white/10"
                 >
-                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-border bg-linear-bg-surface dark:border-white/8 dark:bg-white/4">
+                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-border bg-white dark:border-white/8 dark:bg-white/4">
                     <span className="text-linear-text-quaternary text-xs font-bold">{item.rank}</span>
                   </div>
                   <div className={`flex-shrink-0 mt-0.5`}>
