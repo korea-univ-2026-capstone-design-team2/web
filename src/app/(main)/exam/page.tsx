@@ -1,458 +1,242 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  BookOpen,
-  Shield,
-  Flame,
+  AlertCircle,
   BarChart2,
-  Monitor,
-  Building2,
-  CheckSquare,
-  ChevronRight,
+  Calendar,
+  CheckCircle2,
   Clock,
   FileText,
-  Zap,
-  Target,
+  Loader2,
+  Play,
+  RefreshCw,
+  XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { hasApiBaseUrl } from '@/lib/api/client';
 import { examService } from '@/lib/services/examService';
-import type { Subject } from '@/types/question-dto';
+import type { ExamStatus, ExamSummaryResDto } from '@/types/question-dto';
+import { DIFFICULTY_LABEL, QUESTION_TYPE_LABEL, SUBJECT_LABEL } from '@/types/question-dto';
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+const PAGE_SIZE = 20;
 
-interface ExamCategory {
-  id: string;
-  name: string;
-  icon: React.ElementType;
-  iconColor: string;
-  iconBg: string;
-  subjects: string[];
-  popular?: boolean;
+const STATUS_LABEL: Record<ExamStatus, string> = {
+  GENERATING: '생성 중',
+  READY: '응시 가능',
+  FAILED: '생성 실패',
+};
+
+const STATUS_STYLE: Record<ExamStatus, string> = {
+  GENERATING: 'border-amber-500/25 bg-amber-500/10 text-amber-600',
+  READY: 'border-linear-status-emerald/25 bg-linear-status-emerald/10 text-linear-status-emerald',
+  FAILED: 'border-red-500/25 bg-red-500/10 text-red-500',
+};
+
+function formatDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
 }
 
-type ExamType = 'mock' | 'part' | 'weakness';
-type QuestionCount = 10 | 20 | 40 | 'custom';
-
-interface ExamConfig {
-  categoryId: string;
-  selectedSubjects: string[];
-  examType: ExamType;
-  questionCount: QuestionCount;
-  customCount: number;
-  timeLimit: number; // minutes
+function StatusIcon({ status }: { status: ExamStatus }) {
+  if (status === 'READY') return <CheckCircle2 className="h-4 w-4" />;
+  if (status === 'FAILED') return <XCircle className="h-4 w-4" />;
+  return <Loader2 className="h-4 w-4 animate-spin" />;
 }
-
-// ─── Data ────────────────────────────────────────────────────────────────────
-
-const examCategories: ExamCategory[] = [
-  {
-    id: '9gup-national',
-    name: '9급 국가직',
-    icon: BookOpen,
-    iconColor: 'text-linear-accent-violet',
-    iconBg: 'bg-linear-brand-indigo/10',
-    subjects: ['국어', '영어', '한국사', '행정학', '행정법'],
-    popular: true,
-  },
-  {
-    id: '9gup-local',
-    name: '9급 지방직',
-    icon: Building2,
-    iconColor: 'text-linear-status-emerald',
-    iconBg: 'bg-linear-status-emerald/10',
-    subjects: ['국어', '영어', '한국사', '행정학', '사회'],
-  },
-  {
-    id: 'police',
-    name: '경찰 공채',
-    icon: Shield,
-    iconColor: 'text-blue-400',
-    iconBg: 'bg-[rgba(96,165,250,0.1)]',
-    subjects: ['형사법', '경찰학', '헌법', '범죄학', '영어'],
-  },
-  {
-    id: 'fire',
-    name: '소방 공채',
-    icon: Flame,
-    iconColor: 'text-orange-400',
-    iconBg: 'bg-[rgba(251,146,60,0.1)]',
-    subjects: ['소방학', '소방관계법', '행정학', '영어', '한국사'],
-  },
-  {
-    id: '5gup-psat',
-    name: '5급 PSAT',
-    icon: BarChart2,
-    iconColor: 'text-linear-accent-violet',
-    iconBg: 'bg-[rgba(192,132,252,0.1)]',
-    subjects: ['언어논리', '자료해석', '상황판단'],
-  },
-  {
-    id: 'computer-9gup',
-    name: '전산직 9급',
-    icon: Monitor,
-    iconColor: 'text-cyan-400',
-    iconBg: 'bg-[rgba(34,211,238,0.1)]',
-    subjects: ['국어', '영어', '한국사', '컴퓨터일반', '정보보호론'],
-  },
-];
-
-const examTypeOptions: { value: ExamType; label: string; desc: string; icon: React.ElementType }[] = [
-  { value: 'mock', label: '실전 모의고사', desc: '실제 시험과 동일한 환경', icon: FileText },
-  { value: 'part', label: '파트별 연습', desc: '과목별 집중 훈련', icon: Target },
-  { value: 'weakness', label: '취약점 집중', desc: 'AI가 분석한 약점 보완', icon: Zap },
-];
-
-const questionCountOptions: { value: QuestionCount; label: string }[] = [
-  { value: 10, label: '10문항' },
-  { value: 20, label: '20문항' },
-  { value: 40, label: '40문항' },
-  { value: 'custom', label: '직접 입력' },
-];
-
-function getTimeLimit(count: number): number {
-  return Math.round(count * 1.5); // 1.5 min per question
-}
-
-// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function ExamPage() {
   const router = useRouter();
+  const [exams, setExams] = useState<ExamSummaryResDto[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [selectedCategory, setSelectedCategory] = useState<ExamCategory | null>(null);
-  const [isStarting, setIsStarting] = useState(false);
-  const [startError, setStartError] = useState<string | null>(null);
-  const [config, setConfig] = useState<ExamConfig>({
-    categoryId: '',
-    selectedSubjects: [],
-    examType: 'mock',
-    questionCount: 20,
-    customCount: 20,
-    timeLimit: 30,
-  });
+  const apiConfigured = hasApiBaseUrl();
 
-  function handleCategorySelect(cat: ExamCategory) {
-    setSelectedCategory(cat);
-    setConfig((prev) => ({
-      ...prev,
-      categoryId: cat.id,
-      selectedSubjects: [...cat.subjects],
-    }));
-    // Scroll to config panel
-    setTimeout(() => {
-      document.getElementById('exam-config')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  }
+  async function loadExams() {
+    setIsLoading(true);
+    setError(null);
 
-  function toggleSubject(subject: string) {
-    setConfig((prev) => ({
-      ...prev,
-      selectedSubjects: prev.selectedSubjects.includes(subject)
-        ? prev.selectedSubjects.filter((s) => s !== subject)
-        : [...prev.selectedSubjects, subject],
-    }));
-  }
-
-  function handleQuestionCountChange(value: QuestionCount) {
-    const count = value === 'custom' ? config.customCount : (value as number);
-    setConfig((prev) => ({
-      ...prev,
-      questionCount: value,
-      timeLimit: getTimeLimit(count),
-    }));
-  }
-
-  function handleCustomCountChange(value: number) {
-    const clamped = Math.min(100, Math.max(5, value));
-    setConfig((prev) => ({
-      ...prev,
-      customCount: clamped,
-      timeLimit: getTimeLimit(clamped),
-    }));
-  }
-
-  function mapPsatSubject(subjectName: string | undefined): Subject {
-    if (subjectName === '자료해석') return 'DATA_INTERPRETATION';
-    if (subjectName === '상황판단') return 'SITUATIONAL_JUDGMENT';
-    return 'VERBAL_LOGIC';
-  }
-
-  async function handleStartExam() {
-    setStartError(null);
-
-    if (selectedCategory?.id === '5gup-psat' && hasApiBaseUrl()) {
-      setIsStarting(true);
-      try {
-        const exam = await examService.generateBackendExam({
-          title: `${selectedCategory.name} 실전 모의고사`,
-          subject: mapPsatSubject(config.selectedSubjects[0]),
-          questionType: 'READING',
-          questionSubType: null,
-          difficulty: 'MEDIUM',
-          topicCategory: 'POLITICS',
-          topicKeyword: null,
-          topicDescription: null,
-          targetQuestionCount: effectiveCount,
-          frameSearchTopK: 3,
-        });
-        router.push(`/exam/${exam.examId}/session`);
-        return;
-      } catch {
-        setStartError('백엔드 모의고사 생성에 실패했습니다. API 주소와 서버 상태를 확인해주세요.');
-        setIsStarting(false);
-        return;
-      }
+    if (!apiConfigured) {
+      setExams([]);
+      setTotalCount(0);
+      setError('NEXT_PUBLIC_API_BASE_URL이 설정되어 있지 않습니다.');
+      setIsLoading(false);
+      return;
     }
 
-    router.push('/exam/mock-001/session');
+    try {
+      const response = await examService.getBackendExamList({ page: 0, size: PAGE_SIZE });
+      setExams(response.items);
+      setTotalCount(response.totalCount);
+    } catch {
+      setExams([]);
+      setTotalCount(0);
+      setError('모의고사 목록을 불러오지 못했습니다. 백엔드 서버 상태를 확인해주세요.');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  const effectiveCount =
-    config.questionCount === 'custom' ? config.customCount : config.questionCount;
+  useEffect(() => {
+    void loadExams();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const readyCount = useMemo(() => exams.filter((exam) => exam.status === 'READY').length, [exams]);
+  const generatingCount = useMemo(() => exams.filter((exam) => exam.status === 'GENERATING').length, [exams]);
+
+  function handleStart(exam: ExamSummaryResDto) {
+    if (exam.status !== 'READY') return;
+    router.push(`/exam/${exam.examId}/session`);
+  }
 
   return (
-    <div className="min-h-screen bg-white px-4 py-8 md:px-8 text-linear-text-primary">
-      <div className="mx-auto max-w-6xl space-y-8">
-
-        {/* Header */}
-        <div className="space-y-1">
-          <h1 className="linear-text-h2 tracking-tight text-linear-text-primary">
-            시험 유형 선택
-          </h1>
-          <p className="linear-text-small text-linear-text-tertiary">
-            응시할 시험을 선택하고 학습을 시작하세요
-          </p>
-        </div>
-
-        {/* Category Cards Grid */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {examCategories.map((cat) => {
-            const Icon = cat.icon;
-            const isSelected = selectedCategory?.id === cat.id;
-
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => handleCategorySelect(cat)}
-                className={cn(
-                  'group relative flex flex-col gap-4 rounded-[12px] border p-5 text-left transition-all duration-200 shadow-[var(--shadow-level-2)]',
-                  isSelected
-                    ? 'border-linear-brand-indigo bg-linear-brand-indigo/10'
-                    : 'border-border bg-white hover:bg-black/3 dark:hover:bg-white/6'
-                )}
-              >
-                {/* Popular badge */}
-                {cat.popular && (
-                  <span className="absolute top-3 right-3 rounded-full bg-linear-brand-indigo/10 px-2 py-0.5 text-xs font-medium text-linear-accent-violet border border-linear-brand-indigo/20">
-                    인기
-                  </span>
-                )}
-
-                {/* Icon + name */}
-                <div className="flex items-center gap-3">
-                  <div className={cn('flex h-10 w-10 items-center justify-center rounded-[8px]', cat.iconBg)}>
-                    <Icon className={cn('h-5 w-5', cat.iconColor)} />
-                  </div>
-                  <div>
-                    <p className="linear-text-body-medium text-linear-text-primary">{cat.name}</p>
-                    <p className="linear-text-caption text-linear-text-tertiary">과목 수: {cat.subjects.length}개</p>
-                  </div>
-                </div>
-
-                {/* Subject tags */}
-                <div className="flex flex-wrap gap-1.5">
-                  {cat.subjects.map((s) => (
-                    <span
-                      key={s}
-                      className="rounded-[4px] border border-border bg-white px-2 py-0.5 text-[11px] text-linear-text-tertiary"
-                    >
-                      {s}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Select button */}
-                <div
-                  className={cn(
-                    'flex items-center justify-between rounded-[6px] px-3 py-2 text-sm font-medium transition-colors',
-                    isSelected
-                      ? 'bg-linear-brand-indigo text-white'
-                      : 'bg-white text-linear-text-secondary group-hover:bg-black/3 dark:group-hover:bg-white/6'
-                  )}
-                >
-                  {isSelected ? '선택됨' : '선택하기'}
-                  <ChevronRight className="h-4 w-4" />
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Exam Config Panel */}
-        {selectedCategory && (
-          <div
-            id="exam-config"
-            className="rounded-[12px] border border-border bg-white p-6 space-y-6 shadow-[var(--shadow-level-2)]"
-          >
-            <div className="flex items-center gap-3 border-b border-border pb-4">
-              <div className={cn('flex h-9 w-9 items-center justify-center rounded-[8px]', selectedCategory.iconBg)}>
-                <selectedCategory.icon className={cn('h-4.5 w-4.5', selectedCategory.iconColor)} strokeWidth={1.5} />
+    <div className="min-h-screen bg-white px-4 py-8 text-linear-text-primary md:px-8">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <header className="overflow-hidden rounded-[18px] border border-border bg-white shadow-[var(--shadow-level-2)]">
+          <div className="grid gap-6 p-6 md:grid-cols-[1fr_320px] md:p-8">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-linear-brand-indigo/20 bg-linear-brand-indigo/8 px-3 py-1 text-xs font-medium text-linear-accent-violet">
+                <BarChart2 className="h-3.5 w-3.5" />
+                5급 PSAT CBT
               </div>
-              <div>
-                <h2 className="linear-text-body-medium text-linear-text-primary">{selectedCategory.name} 시험 설정</h2>
-                <p className="linear-text-caption text-linear-text-tertiary">응시 조건을 설정하세요</p>
+              <div className="space-y-2">
+                <h1 className="linear-text-h2 tracking-tight text-linear-text-primary">PSAT 모의고사 목록</h1>
+                <p className="max-w-2xl text-sm leading-6 text-linear-text-tertiary">
+                  백엔드에 생성된 PSAT 모의고사만 표시합니다. 응시 가능한 시험을 선택하면 실제 문항지 데이터를 불러와 CBT 화면으로 이동합니다.
+                </p>
               </div>
             </div>
 
-            {/* Subject Selection */}
-            <div className="space-y-3">
-              <label className="block linear-text-small-medium text-linear-text-secondary">
-                응시 과목 선택
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {selectedCategory.subjects.map((s) => {
-                  const checked = config.selectedSubjects.includes(s);
-                  return (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => toggleSubject(s)}
-                      className={cn(
-                        'flex items-center gap-1.5 rounded-[6px] border px-3 py-1.5 linear-text-small transition-all',
-                        checked
-                          ? 'border-linear-brand-indigo bg-linear-brand-indigo/10 text-linear-text-primary'
-                          : 'border-border bg-transparent text-linear-text-tertiary hover:border-linear-brand-indigo/30'
-                      )}
-                    >
-                      <CheckSquare
-                        strokeWidth={1.5}
-                        className={cn('h-3.5 w-3.5', checked ? 'text-linear-accent-violet' : 'text-linear-text-tertiary')}
-                      />
-                      {s}
-                    </button>
-                  );
-                })}
+            <div className="grid grid-cols-3 gap-2 md:grid-cols-1">
+              <div className="rounded-[12px] border border-border bg-white px-4 py-3">
+                <p className="text-xs text-linear-text-tertiary">전체</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-linear-text-primary">{totalCount}</p>
+              </div>
+              <div className="rounded-[12px] border border-linear-status-emerald/20 bg-linear-status-emerald/8 px-4 py-3">
+                <p className="text-xs text-linear-text-tertiary">응시 가능</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-linear-status-emerald">{readyCount}</p>
+              </div>
+              <div className="rounded-[12px] border border-amber-500/20 bg-amber-500/8 px-4 py-3">
+                <p className="text-xs text-linear-text-tertiary">생성 중</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-amber-600">{generatingCount}</p>
               </div>
             </div>
+          </div>
+        </header>
 
-            {/* Exam Type */}
-            <div className="space-y-3">
-              <label className="block linear-text-small-medium text-linear-text-secondary">
-                시험 유형
-              </label>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                {examTypeOptions.map((opt) => {
-                  const TypeIcon = opt.icon;
-                  const isActive = config.examType === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setConfig((prev) => ({ ...prev, examType: opt.value }))}
-                      className={cn(
-                        'flex items-center gap-3 rounded-[8px] border p-3 text-left transition-all',
-                        isActive
-                          ? 'border-linear-brand-indigo bg-linear-brand-indigo/10'
-                          : 'border-border bg-transparent hover:border-linear-brand-indigo/30'
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          'flex h-8 w-8 items-center justify-center rounded-[6px] shrink-0',
-                          isActive
-                            ? 'bg-linear-brand-indigo/20'
-                            : 'bg-white'
-                        )}
-                      >
-                        <TypeIcon
-                          strokeWidth={1.5}
-                          className={cn('h-4 w-4', isActive ? 'text-linear-accent-violet' : 'text-linear-text-tertiary')}
-                        />
-                      </div>
-                      <div>
-                        <p className={cn('linear-text-small-medium', isActive ? 'text-linear-text-primary' : 'text-linear-text-secondary')}>
-                          {opt.label}
-                        </p>
-                        <p className="linear-text-caption text-linear-text-tertiary mt-0.5">{opt.desc}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+        <section className="rounded-[14px] border border-border bg-white shadow-[var(--shadow-level-2)]">
+          <div className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-4">
+            <div>
+              <h2 className="text-sm font-semibold text-linear-text-primary">생성된 모의고사</h2>
+              <p className="mt-0.5 text-xs text-linear-text-tertiary">`GET /exams` 응답 기준</p>
             </div>
-
-            {/* Question Count */}
-            <div className="space-y-3">
-              <label className="block linear-text-small-medium text-linear-text-secondary">
-                문제 수
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {questionCountOptions.map((opt) => {
-                  const isActive = config.questionCount === opt.value;
-                  return (
-                    <button
-                      key={String(opt.value)}
-                      type="button"
-                      onClick={() => handleQuestionCountChange(opt.value)}
-                      className={cn(
-                        'rounded-[6px] border px-4 py-2 linear-text-small transition-all',
-                        isActive
-                          ? 'border-linear-brand-indigo bg-linear-brand-indigo/10 text-linear-text-primary'
-                          : 'border-border text-linear-text-tertiary hover:border-linear-brand-indigo/30 hover:text-linear-text-secondary'
-                      )}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {config.questionCount === 'custom' && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={5}
-                    max={100}
-                    value={config.customCount}
-                    onChange={(e) => handleCustomCountChange(Number(e.target.value))}
-                    className="w-24 rounded-[6px] border border-border bg-white px-3 py-1.5 linear-text-small text-linear-text-primary outline-none focus:border-linear-brand-indigo transition-colors"
-                  />
-                  <span className="linear-text-small text-linear-text-tertiary">문항 (5~100)</span>
-                </div>
-              )}
-            </div>
-
-            {/* Time Limit Summary */}
-            <div className="flex items-center gap-2 rounded-[8px] border border-border bg-white px-4 py-3 shadow-[var(--shadow-level-1)]">
-              <Clock className="h-4 w-4 text-linear-text-tertiary" strokeWidth={1.5} />
-              <span className="linear-text-small text-linear-text-tertiary">
-                제한 시간:{' '}
-                <span className="font-medium text-linear-text-secondary">
-                  {config.timeLimit}분
-                </span>
-                {' '}({effectiveCount}문항 × 1.5분)
-              </span>
-            </div>
-
-            {startError && (
-              <p className="rounded-[8px] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500">
-                {startError}
-              </p>
-            )}
-
-            {/* Start Button */}
             <button
               type="button"
-              onClick={handleStartExam}
-              disabled={config.selectedSubjects.length === 0 || isStarting}
-              className="w-full rounded-[8px] bg-linear-brand-indigo px-6 py-3 linear-text-small-medium text-white transition-all hover:bg-linear-brand-indigo/90 disabled:cursor-not-allowed disabled:opacity-40 shadow-[var(--shadow-level-2)]"
+              onClick={() => void loadExams()}
+              disabled={isLoading}
+              className="ml-auto inline-flex items-center gap-2 rounded-[8px] border border-border bg-white px-3 py-2 text-sm font-medium text-linear-text-secondary transition-colors hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isStarting ? '시험 생성 중...' : '시험 시작하기 →'}
+              <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+              새로고침
             </button>
           </div>
-        )}
+
+          {error && (
+            <div className="m-5 rounded-[10px] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
+
+          {isLoading ? (
+            <div className="flex min-h-72 flex-col items-center justify-center gap-3 text-linear-text-tertiary">
+              <Loader2 className="h-8 w-8 animate-spin text-linear-accent-violet" />
+              <p className="text-sm">모의고사 목록을 불러오는 중입니다.</p>
+            </div>
+          ) : exams.length === 0 && !error ? (
+            <div className="flex min-h-72 flex-col items-center justify-center gap-3 px-6 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-white">
+                <FileText className="h-6 w-6 text-linear-text-tertiary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-linear-text-primary">생성된 모의고사가 없습니다.</p>
+                <p className="mt-1 text-sm text-linear-text-tertiary">백엔드에서 PSAT 모의고사를 생성한 뒤 다시 확인하세요.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="divide-y divide-border/70">
+              {exams.map((exam) => {
+                const canStart = exam.status === 'READY';
+                return (
+                  <article key={exam.examId} className="grid gap-4 px-5 py-5 transition-colors hover:bg-black/2 md:grid-cols-[1fr_auto]">
+                    <div className="min-w-0 space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold', STATUS_STYLE[exam.status])}>
+                          <StatusIcon status={exam.status} />
+                          {STATUS_LABEL[exam.status]}
+                        </span>
+                        <span className="text-xs text-linear-text-tertiary">#{exam.examId}</span>
+                      </div>
+
+                      <div>
+                        <h3 className="truncate text-base font-semibold text-linear-text-primary">{exam.title}</h3>
+                        <div className="mt-2 flex flex-wrap gap-2 text-xs text-linear-text-tertiary">
+                          <span className="rounded-full border border-border bg-white px-2.5 py-1">{SUBJECT_LABEL[exam.subject]}</span>
+                          <span className="rounded-full border border-border bg-white px-2.5 py-1">{QUESTION_TYPE_LABEL[exam.questionType]}</span>
+                          <span className="rounded-full border border-border bg-white px-2.5 py-1">{DIFFICULTY_LABEL[exam.difficulty]}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-4 text-xs text-linear-text-tertiary">
+                        <span className="inline-flex items-center gap-1.5">
+                          <FileText className="h-3.5 w-3.5" />
+                          문항 {exam.actualQuestionCount}/{exam.targetQuestionCount}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5" />
+                          예상 {Math.round(exam.targetQuestionCount * 1.5)}분
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {formatDate(exam.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center md:justify-end">
+                      <button
+                        type="button"
+                        onClick={() => handleStart(exam)}
+                        disabled={!canStart}
+                        className={cn(
+                          'inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-semibold transition-colors md:w-auto',
+                          canStart
+                            ? 'bg-linear-brand-indigo text-white hover:bg-linear-brand-indigo/90'
+                            : 'cursor-not-allowed border border-border bg-white text-linear-text-tertiary'
+                        )}
+                      >
+                        <Play className="h-4 w-4" />
+                        {canStart ? '응시하기' : STATUS_LABEL[exam.status]}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

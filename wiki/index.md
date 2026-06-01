@@ -61,8 +61,11 @@
 - [[lint/2026-05-27T13-09-52]] - lint run
 - [[lint/2026-05-27T13-10-01]] - lint run
 - [[lint/2026-06-01T12-54-16]] - lint run
+- [[lint/2026-06-01T13-06-26]] - lint run
+- [[lint/2026-06-01T13-06-44]] - lint run
 
 ## Sessions
+- [[sessions/2026-06-01-psat-exam-list-ui]] - PSAT 모의고사 목록 UI
 - [[sessions/2026-05-27-light-surface-white-polish]] - 라이트 모드 white surface 통일 정리
 - [[sessions/2026-05-27-backend-swagger-integration]] - 백엔드 Swagger API 연동
 - [[sessions/2026-05-18-exam-dto-direct-migration]] - 세션/결과 DTO 직결 마이그레이션

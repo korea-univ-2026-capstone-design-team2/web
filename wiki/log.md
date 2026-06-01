@@ -109,3 +109,9 @@
 ## [2026-06-01 21:54] query | 백엔드 개발자에게 전달할 missing API 구조
 
 ## [2026-06-01 21:54] lint | issues=0
+
+## [2026-06-01 22:06] session | PSAT Exam List UI
+
+## [2026-06-01 22:06] lint | issues=0
+
+## [2026-06-01 22:06] lint | issues=0
