@@ -38,11 +38,15 @@ function buildIncorrectReasons(question: Question): Record<string, string> {
   }, {});
 }
 
-export function toQuestionPaperDto(question: Question, order?: number): QuestionPaper {
+function basePaper(question: Question, order?: number): QuestionPaper {
   const questionId = order !== undefined ? order + 1 : question.questionId;
   return {
     questionId,
-    questionSetId: null,
+    questionItemId: questionId,
+    groupQuestionId: questionId,
+    generationId: 0,
+    sharedContextContent: question.passage ?? null,
+    sharedContextDescription: null,
     subject: mapSubject(question.subjectId),
     questionType: mapQuestionType(question.type),
     questionSubType: null,
@@ -58,40 +62,32 @@ export function toQuestionPaperDto(question: Question, order?: number): Question
   };
 }
 
+export function toQuestionPaperDto(question: Question, order?: number): QuestionPaper {
+  return basePaper(question, order);
+}
+
 export function toQuestionSummaryDto(
   question: Question,
   order?: number,
   status: QuestionStatus = 'PUBLISHED'
 ): QuestionSummary {
-  const questionId = order !== undefined ? order + 1 : question.questionId;
+  const paper = basePaper(question, order);
   return {
-    questionId,
+    questionId: paper.questionId,
     questionSetId: null,
-    subject: mapSubject(question.subjectId),
-    questionType: mapQuestionType(question.type),
-    questionSubType: null,
-    difficulty: mapDifficulty(question.difficulty),
+    subject: paper.subject,
+    questionType: paper.questionType,
+    questionSubType: paper.questionSubType,
+    difficulty: paper.difficulty,
     status,
     qualityScore: null,
   };
 }
 
 export function toQuestionReviewDto(question: Question, order?: number): QuestionReview {
-  const questionId = order !== undefined ? order + 1 : question.questionId;
+  const paper = basePaper(question, order);
   return {
-    questionId,
-    questionSetId: null,
-    subject: mapSubject(question.subjectId),
-    questionType: mapQuestionType(question.type),
-    questionSubType: null,
-    difficulty: mapDifficulty(question.difficulty),
-    stem: question.content,
-    passageType: question.passage ? 'TEXT' : null,
-    passageContent: question.passage ?? null,
-    exhibitType: question.imageUrl ? 'IMAGE' : null,
-    exhibitContent: question.imageUrl ?? null,
-    propositions: null,
-    answerSheetType: 'SINGLE_CHOICE',
+    ...paper,
     correctNumber: question.correctAnswer,
     choices: question.options.map((text, index) => ({
       number: index + 1,
@@ -106,28 +102,11 @@ export function toQuestionReviewDto(question: Question, order?: number): Questio
 export function toQuestionDetailDto(question: Question, order?: number): QuestionDetail {
   const review = toQuestionReviewDto(question, order);
   return {
-    questionId: review.questionId,
-    generationId: 0,
-    questionSetId: review.questionSetId,
-    subject: review.subject,
-    questionType: review.questionType,
-    questionSubType: review.questionSubType,
-    difficulty: review.difficulty,
+    ...review,
     status: 'PUBLISHED',
     qualityScore: null,
     passageTopicCategory: null,
     passageTopicKeyword: null,
-    stem: review.stem,
-    passageType: review.passageType,
-    passageContent: review.passageContent,
-    exhibitType: review.exhibitType,
-    exhibitContent: review.exhibitContent,
-    propositions: review.propositions,
-    answerSheetType: review.answerSheetType,
-    correctNumber: review.correctNumber,
-    choices: review.choices,
-    correctReason: review.correctReason,
-    incorrectReasons: review.incorrectReasons,
     frameId: 0,
     similarityScore: 0,
     frameType: 'NONE',

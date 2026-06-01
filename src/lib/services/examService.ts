@@ -1,7 +1,15 @@
 import type { ExamCategory, ExamCategoryInfo, ExamConfig, ExamResult, ExamSession, ExamType } from '@/types';
+import type {
+  GenerateExamReqDto,
+  GenerateExamResDto,
+  GetExamDetailResDto,
+  GetExamListParams,
+  GetExamListResDto,
+} from '@/types/question-dto';
 import { mockCategories } from '@/data/mock/categories';
 import { mockQuestions } from '@/data/mock/questions';
 import { mockResults } from '@/data/mock/results';
+import { apiRequest, hasApiBaseUrl } from '@/lib/api/client';
 
 function generateId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -65,6 +73,10 @@ function calculateExamResult(session: ExamSession): ExamResult {
   };
 }
 
+function isBackendExamId(examId: string): boolean {
+  return /^\d+$/.test(examId);
+}
+
 export const examService = {
   getCategories: async (): Promise<ExamCategoryInfo[]> => {
     return Promise.resolve(mockCategories);
@@ -73,6 +85,34 @@ export const examService = {
   getCategory: async (id: ExamCategory): Promise<ExamCategoryInfo | undefined> => {
     const category = mockCategories.find((c) => c.id === id);
     return Promise.resolve(category);
+  },
+
+  getBackendExamList: async (params: GetExamListParams = {}): Promise<GetExamListResDto> => {
+    return apiRequest<GetExamListResDto>('/exams', { query: params });
+  },
+
+  getBackendExamDetail: async (examId: number): Promise<GetExamDetailResDto> => {
+    return apiRequest<GetExamDetailResDto>(`/exams/${examId}`);
+  },
+
+  generateBackendExam: async (payload: GenerateExamReqDto): Promise<GenerateExamResDto> => {
+    return apiRequest<GenerateExamResDto>('/exams', { method: 'POST', body: payload });
+  },
+
+  getExamQuestionIds: async (examId: string): Promise<number[]> => {
+    if (hasApiBaseUrl() && isBackendExamId(examId)) {
+      try {
+        const detail = await examService.getBackendExamDetail(Number(examId));
+        const questionIds = [...detail.items]
+          .sort((a, b) => a.ordering - b.ordering)
+          .map((item) => item.questionId);
+        if (questionIds.length) return questionIds;
+      } catch {
+        // fallback to the local mock question id sequence
+      }
+    }
+
+    return mockQuestions.slice(0, 20).map((question) => question.questionId);
   },
 
   createExamSession: async (

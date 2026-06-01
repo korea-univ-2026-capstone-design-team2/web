@@ -1,8 +1,12 @@
 import type { Question, RecommendedQuestion } from '@/types';
 import type {
+  CreateQuestionResDto,
   QuestionDetail,
+  QuestionDetailView,
   QuestionPaper,
+  QuestionPaperView,
   QuestionReview,
+  QuestionReviewView,
   QuestionSummary,
 } from '@/types/question-dto';
 import { mockQuestions } from '@/data/mock/questions';
@@ -13,35 +17,90 @@ import {
   toQuestionReviewDto,
   toQuestionSummaryDto,
 } from '@/lib/mappers/questionDtoMapper';
+import { apiRequest, hasApiBaseUrl } from '@/lib/api/client';
 
-interface ApiSuccess<T> {
-  data: T;
-}
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '');
 const bookmarkedQuestionIds = new Set<number>([4, 17, 28]);
-
-async function fetchApi<T>(path: string): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error('NEXT_PUBLIC_API_BASE_URL is not set');
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-  }
-
-  const body = (await response.json()) as ApiSuccess<T>;
-  return body.data;
-}
 
 function getQuestionByNumber(questionId: number): Question | undefined {
   return mockQuestions.find((question) => question.questionId === questionId);
+}
+
+function normalizePaperView(view: QuestionPaperView): QuestionPaper[] {
+  return view.items.map((item) => ({
+    ...item,
+    questionId: item.questionItemId || item.questionId,
+    groupQuestionId: view.questionId,
+    generationId: view.generationId,
+    sharedContextContent: view.sharedContextContent,
+    sharedContextDescription: view.sharedContextDescription,
+    passageType: view.sharedContextContent ? 'TEXT' : null,
+    passageContent: view.sharedContextContent,
+  }));
+}
+
+function normalizeReviewView(view: QuestionReviewView): QuestionReview[] {
+  return view.items.map((item) => ({
+    ...item,
+    questionId: item.questionItemId || item.questionId,
+    groupQuestionId: view.questionId,
+    generationId: view.generationId,
+    sharedContextContent: view.sharedContextContent,
+    sharedContextDescription: view.sharedContextDescription,
+    passageType: view.sharedContextContent ? 'TEXT' : null,
+    passageContent: view.sharedContextContent,
+    choices: item.choices.map((choice) => ({
+      number: choice.number,
+      text: choice.text,
+      isCorrect: choice.correct,
+    })),
+  }));
+}
+
+function normalizeDetailView(view: QuestionDetailView): QuestionDetail | undefined {
+  const first = view.items[0];
+  if (!first) return undefined;
+  return {
+    ...first,
+    questionId: first.questionItemId || first.questionId,
+    groupQuestionId: view.questionId,
+    generationId: view.generationId,
+    sharedContextContent: view.sharedContextContent,
+    sharedContextDescription: view.sharedContextDescription,
+    passageType: view.sharedContextContent ? 'TEXT' : null,
+    passageContent: view.sharedContextContent,
+    choices: first.choices.map((choice) => ({
+      number: choice.number,
+      text: choice.text,
+      isCorrect: choice.correct,
+    })),
+    status: first.status,
+    qualityScore: first.qualityScore,
+    passageTopicCategory: view.passageTopicCategory,
+    passageTopicKeyword: view.passageTopicKeyword,
+    frameId: 0,
+    similarityScore: 0,
+    frameType: 'UNSPECIFIED',
+  };
+}
+
+function getMockPapersByIds(questionIds: number[]): QuestionPaper[] {
+  return questionIds
+    .map((questionId) => {
+      const question = getQuestionByNumber(questionId);
+      if (!question) return null;
+      return toQuestionPaperDto(question, questionId - 1);
+    })
+    .filter((item): item is QuestionPaper => Boolean(item));
+}
+
+function getMockReviewsByIds(questionIds: number[]): QuestionReview[] {
+  return questionIds
+    .map((questionId) => {
+      const question = getQuestionByNumber(questionId);
+      if (!question) return null;
+      return toQuestionReviewDto(question, questionId - 1);
+    })
+    .filter((item): item is QuestionReview => Boolean(item));
 }
 
 export const questionService = {
@@ -80,10 +139,10 @@ export const questionService = {
     if (bookmarkedQuestionIds.has(questionId)) {
       bookmarkedQuestionIds.delete(questionId);
       return Promise.resolve(false);
-    } else {
-      bookmarkedQuestionIds.add(questionId);
-      return Promise.resolve(true);
     }
+
+    bookmarkedQuestionIds.add(questionId);
+    return Promise.resolve(true);
   },
 
   getQuestionsByDifficulty: async (
@@ -101,6 +160,22 @@ export const questionService = {
     return Promise.resolve(mockQuestions.map((question, index) => toQuestionSummaryDto(question, index)));
   },
 
+  createQuestion: async (payload: unknown): Promise<CreateQuestionResDto> => {
+    return apiRequest<CreateQuestionResDto>('/questions', { method: 'POST', body: payload });
+  },
+
+  getQuestionPaperView: async (questionId: number): Promise<QuestionPaperView> => {
+    return apiRequest<QuestionPaperView>(`/questions/${questionId}/paper`);
+  },
+
+  getQuestionReviewView: async (questionId: number): Promise<QuestionReviewView> => {
+    return apiRequest<QuestionReviewView>(`/questions/${questionId}/review`);
+  },
+
+  getQuestionDetailView: async (questionId: number): Promise<QuestionDetailView> => {
+    return apiRequest<QuestionDetailView>(`/questions/${questionId}/detail`);
+  },
+
   getQuestionPapers: async (): Promise<QuestionPaper[]> => {
     return Promise.resolve(mockQuestions.map((question, index) => toQuestionPaperDto(question, index)));
   },
@@ -108,26 +183,16 @@ export const questionService = {
   getQuestionPapersByIds: async (questionIds: number[]): Promise<QuestionPaper[]> => {
     if (!questionIds.length) return Promise.resolve([]);
 
-    if (API_BASE_URL) {
+    if (hasApiBaseUrl()) {
       try {
-        const papers = await Promise.all(
-          questionIds.map((questionId) => fetchApi<QuestionPaper>(`/questions/${questionId}/paper`))
-        );
-        return papers;
+        const views = await Promise.all(questionIds.map((questionId) => questionService.getQuestionPaperView(questionId)));
+        return views.flatMap(normalizePaperView);
       } catch {
-        // fallback to mock mapping
+        // Keep local development usable when the configured backend is unavailable.
       }
     }
 
-    return Promise.resolve(
-      questionIds
-        .map((questionId) => {
-          const question = getQuestionByNumber(questionId);
-          if (!question) return null;
-          return toQuestionPaperDto(question, questionId - 1);
-        })
-        .filter((item): item is QuestionPaper => Boolean(item))
-    );
+    return Promise.resolve(getMockPapersByIds(questionIds));
   },
 
   getQuestionReviews: async (): Promise<QuestionReview[]> => {
@@ -137,29 +202,27 @@ export const questionService = {
   getQuestionReviewsByIds: async (questionIds: number[]): Promise<QuestionReview[]> => {
     if (!questionIds.length) return Promise.resolve([]);
 
-    if (API_BASE_URL) {
+    if (hasApiBaseUrl()) {
       try {
-        const reviews = await Promise.all(
-          questionIds.map((questionId) => fetchApi<QuestionReview>(`/questions/${questionId}/review`))
-        );
-        return reviews;
+        const views = await Promise.all(questionIds.map((questionId) => questionService.getQuestionReviewView(questionId)));
+        return views.flatMap(normalizeReviewView);
+      } catch {
+        // Keep local development usable when the configured backend is unavailable.
+      }
+    }
+
+    return Promise.resolve(getMockReviewsByIds(questionIds));
+  },
+
+  getQuestionDetail: async (questionId: number): Promise<QuestionDetail | undefined> => {
+    if (hasApiBaseUrl()) {
+      try {
+        return normalizeDetailView(await questionService.getQuestionDetailView(questionId));
       } catch {
         // fallback to mock mapping
       }
     }
 
-    return Promise.resolve(
-      questionIds
-        .map((questionId) => {
-          const question = getQuestionByNumber(questionId);
-          if (!question) return null;
-          return toQuestionReviewDto(question, questionId - 1);
-        })
-        .filter((item): item is QuestionReview => Boolean(item))
-    );
-  },
-
-  getQuestionDetail: async (questionId: number): Promise<QuestionDetail | undefined> => {
     const question = getQuestionByNumber(questionId);
     if (!question) return Promise.resolve(undefined);
     return Promise.resolve(toQuestionDetailDto(question, questionId - 1));

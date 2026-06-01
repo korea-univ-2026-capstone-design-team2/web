@@ -89,3 +89,23 @@
 ## [2026-05-27 13:06] lint | issues=0
 
 ## [2026-05-27 21:55] lint | issues=0
+
+## [2026-05-27 22:06] ingest | PSAT Generation OpenAPI v1
+
+## [2026-05-27 22:06] decision | Backend API env and Swagger contract v1
+
+## [2026-05-27 22:06] query | Swagger와 로컬 기능/API 차이는 무엇인가?
+
+## [2026-05-27 22:06] session | Backend Swagger Integration
+
+## [2026-05-27 22:08] lint | issues=0
+
+## [2026-05-27 22:08] lint | issues=0
+
+## [2026-05-27 22:09] lint | issues=0
+
+## [2026-05-27 22:10] lint | issues=0
+
+## [2026-06-01 21:54] query | 백엔드 개발자에게 전달할 missing API 구조
+
+## [2026-06-01 21:54] lint | issues=0

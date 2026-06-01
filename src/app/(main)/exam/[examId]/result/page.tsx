@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   CheckCircle2,
   XCircle,
@@ -28,6 +29,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { cn } from '@/lib/utils';
 import AnswerOption from '@/components/exam/AnswerOption';
 import { questionService } from '@/lib/services/questionService';
+import { examService } from '@/lib/services/examService';
 import type { QuestionReview } from '@/types/question-dto';
 import { SUBJECT_LABEL } from '@/types/question-dto';
 
@@ -52,18 +54,22 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 }
 
 export default function ResultPage() {
+  const params = useParams();
+  const examId = params.examId as string;
   const [reviews, setReviews] = useState<QuestionReview[]>([]);
 
   useEffect(() => {
     let mounted = true;
-    void questionService.getQuestionReviewsByIds(DEFAULT_QUESTION_IDS).then((response) => {
-      if (!mounted) return;
-      setReviews([...response].sort((a, b) => a.questionId - b.questionId));
-    });
+    void examService.getExamQuestionIds(examId)
+      .then((questionIds) => questionService.getQuestionReviewsByIds(questionIds.length ? questionIds : DEFAULT_QUESTION_IDS))
+      .then((response) => {
+        if (!mounted) return;
+        setReviews(response);
+      });
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [examId]);
 
   const userAnswers = useMemo(() => {
     const result: Record<number, number> = {};

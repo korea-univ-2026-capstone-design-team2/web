@@ -17,6 +17,9 @@ import {
   Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { hasApiBaseUrl } from '@/lib/api/client';
+import { examService } from '@/lib/services/examService';
+import type { Subject } from '@/types/question-dto';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -119,6 +122,8 @@ export default function ExamPage() {
   const router = useRouter();
 
   const [selectedCategory, setSelectedCategory] = useState<ExamCategory | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
   const [config, setConfig] = useState<ExamConfig>({
     categoryId: '',
     selectedSubjects: [],
@@ -168,7 +173,39 @@ export default function ExamPage() {
     }));
   }
 
-  function handleStartExam() {
+  function mapPsatSubject(subjectName: string | undefined): Subject {
+    if (subjectName === '자료해석') return 'DATA_INTERPRETATION';
+    if (subjectName === '상황판단') return 'SITUATIONAL_JUDGMENT';
+    return 'VERBAL_LOGIC';
+  }
+
+  async function handleStartExam() {
+    setStartError(null);
+
+    if (selectedCategory?.id === '5gup-psat' && hasApiBaseUrl()) {
+      setIsStarting(true);
+      try {
+        const exam = await examService.generateBackendExam({
+          title: `${selectedCategory.name} 실전 모의고사`,
+          subject: mapPsatSubject(config.selectedSubjects[0]),
+          questionType: 'READING',
+          questionSubType: null,
+          difficulty: 'MEDIUM',
+          topicCategory: 'POLITICS',
+          topicKeyword: null,
+          topicDescription: null,
+          targetQuestionCount: effectiveCount,
+          frameSearchTopK: 3,
+        });
+        router.push(`/exam/${exam.examId}/session`);
+        return;
+      } catch {
+        setStartError('백엔드 모의고사 생성에 실패했습니다. API 주소와 서버 상태를 확인해주세요.');
+        setIsStarting(false);
+        return;
+      }
+    }
+
     router.push('/exam/mock-001/session');
   }
 
@@ -399,14 +436,20 @@ export default function ExamPage() {
               </span>
             </div>
 
+            {startError && (
+              <p className="rounded-[8px] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500">
+                {startError}
+              </p>
+            )}
+
             {/* Start Button */}
             <button
               type="button"
               onClick={handleStartExam}
-              disabled={config.selectedSubjects.length === 0}
+              disabled={config.selectedSubjects.length === 0 || isStarting}
               className="w-full rounded-[8px] bg-linear-brand-indigo px-6 py-3 linear-text-small-medium text-white transition-all hover:bg-linear-brand-indigo/90 disabled:cursor-not-allowed disabled:opacity-40 shadow-[var(--shadow-level-2)]"
             >
-              시험 시작하기 →
+              {isStarting ? '시험 생성 중...' : '시험 시작하기 →'}
             </button>
           </div>
         )}

@@ -8,6 +8,7 @@ import QuestionCard, { type Question as ExamQuestion } from '@/components/exam/Q
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { questionService } from '@/lib/services/questionService';
+import { examService } from '@/lib/services/examService';
 import type { QuestionPaper } from '@/types/question-dto';
 import { DIFFICULTY_LABEL, QUESTION_TYPE_LABEL, SUBJECT_LABEL } from '@/types/question-dto';
 
@@ -50,18 +51,19 @@ export default function ExamSessionPage() {
 
   useEffect(() => {
     let mounted = true;
-    void questionService.getQuestionPapersByIds(DEFAULT_QUESTION_IDS).then((response) => {
-      if (!mounted) return;
-      const sorted = [...response].sort((a, b) => a.questionId - b.questionId);
-      setPapers(sorted);
-      if (sorted.length) {
-        setCurrentQuestionId(sorted[0].questionId);
-      }
-    });
+    void examService.getExamQuestionIds(examId)
+      .then((questionIds) => questionService.getQuestionPapersByIds(questionIds.length ? questionIds : DEFAULT_QUESTION_IDS))
+      .then((response) => {
+        if (!mounted) return;
+        setPapers(response);
+        if (response.length) {
+          setCurrentQuestionId(response[0].questionId);
+        }
+      });
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [examId]);
 
   useEffect(() => {
     if (timeLeft <= 0) {
