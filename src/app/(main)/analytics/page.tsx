@@ -1,12 +1,13 @@
 'use client';
 
 import { useMemo } from 'react';
-import { TrendingDown, AlertCircle, BookOpen, Zap } from 'lucide-react';
+import { TrendingDown, AlertCircle, BookOpen, Zap, Activity, Target } from 'lucide-react';
 import RadarChart from '@/components/analytics/RadarChart';
 import LineChart from '@/components/analytics/LineChart';
 import BarChart from '@/components/analytics/BarChart';
+import { PageHero, SurfacePanel } from '@/components/common/PageHero';
+import { cn } from '@/lib/utils';
 
-// --- Mock Data ---
 const radarData = [
   { subject: '국어', score: 79 },
   { subject: '영어', score: 68 },
@@ -51,7 +52,6 @@ function generate30DaysMultiData() {
   return data;
 }
 
-// Heatmap data: subjects × units
 const heatmapData = [
   {
     subject: '행정법',
@@ -111,7 +111,7 @@ const weaknessList = [
     accuracy: 38.0,
     recommendation: '기본 개념 재학습 후 기출문제 3회 반복 권장',
     icon: AlertCircle,
-    iconColor: 'text-red-400',
+    iconColor: 'text-red-500',
   },
   {
     rank: 2,
@@ -120,7 +120,7 @@ const weaknessList = [
     accuracy: 45.2,
     recommendation: '단락 요지 파악 훈련 + 어휘 암기 병행 필요',
     icon: TrendingDown,
-    iconColor: 'text-orange-400',
+    iconColor: 'text-orange-500',
   },
   {
     rank: 3,
@@ -129,7 +129,7 @@ const weaknessList = [
     accuracy: 52.7,
     recommendation: '판례 정리 중심으로 최근 5년 기출 풀기 권장',
     icon: BookOpen,
-    iconColor: 'text-yellow-400',
+    iconColor: 'text-amber-500',
   },
   {
     rank: 4,
@@ -138,7 +138,7 @@ const weaknessList = [
     accuracy: 58.3,
     recommendation: '예산 과정·제도 개념도 작성 후 기출 연습',
     icon: BookOpen,
-    iconColor: 'text-yellow-400',
+    iconColor: 'text-amber-500',
   },
   {
     rank: 5,
@@ -147,90 +147,82 @@ const weaknessList = [
     accuracy: 61.0,
     recommendation: '공무원 빈출 어휘 1000개 우선순위 암기 추천',
     icon: Zap,
-    iconColor: 'text-[#0f766e]',
+    iconColor: 'text-linear-accent-violet',
   },
 ];
 
 function getHeatColor(accuracy: number): string {
-  if (accuracy >= 85) {
-    return 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-900 dark:border-emerald-300/30 dark:bg-emerald-400/30 dark:text-emerald-50';
-  }
-  if (accuracy >= 75) {
-    return 'border border-emerald-400/25 bg-emerald-400/10 text-emerald-800 dark:border-emerald-300/25 dark:bg-emerald-400/20 dark:text-emerald-100';
-  }
-  if (accuracy >= 65) {
-    return 'border border-amber-400/30 bg-amber-400/14 text-amber-900 dark:border-amber-300/25 dark:bg-amber-400/20 dark:text-amber-100';
-  }
-  if (accuracy >= 55) {
-    return 'border border-orange-400/30 bg-orange-400/14 text-orange-900 dark:border-orange-300/25 dark:bg-orange-400/20 dark:text-orange-100';
-  }
-  if (accuracy >= 45) {
-    return 'border border-rose-400/30 bg-rose-400/14 text-rose-900 dark:border-rose-300/25 dark:bg-rose-400/20 dark:text-rose-100';
-  }
-  return 'border border-red-500/35 bg-red-500/18 text-red-900 dark:border-red-300/30 dark:bg-red-400/28 dark:text-red-50';
+  if (accuracy >= 85) return 'bg-emerald-500/18 text-emerald-900 ring-1 ring-inset ring-emerald-500/20';
+  if (accuracy >= 75) return 'bg-emerald-400/12 text-emerald-800 ring-1 ring-inset ring-emerald-400/18';
+  if (accuracy >= 65) return 'bg-amber-400/14 text-amber-900 ring-1 ring-inset ring-amber-400/20';
+  if (accuracy >= 55) return 'bg-orange-400/14 text-orange-900 ring-1 ring-inset ring-orange-400/20';
+  if (accuracy >= 45) return 'bg-rose-400/14 text-rose-900 ring-1 ring-inset ring-rose-400/20';
+  return 'bg-red-500/16 text-red-900 ring-1 ring-inset ring-red-500/24';
+}
+
+function accuracyTone(accuracy: number): string {
+  if (accuracy < 50) return 'border-red-500/20 bg-red-500/8 text-red-500';
+  if (accuracy < 65) return 'border-amber-500/20 bg-amber-500/8 text-amber-600';
+  return 'border-linear-brand-indigo/20 bg-linear-brand-indigo/8 text-linear-accent-violet';
 }
 
 export default function AnalyticsPage() {
   const trendData = useMemo(() => generate30DaysMultiData(), []);
 
   return (
-    <div className="min-h-screen bg-white px-4 py-8 md:px-8 text-linear-text-primary">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-white px-4 py-8 text-linear-text-primary md:px-8">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <PageHero
+          eyebrow="Analysis"
+          title="취약 영역 분석"
+          description="정답률이 낮은 단원과 최근 성적 흐름을 같은 기준으로 정렬했습니다. 색은 강하게, 표면은 낮게 유지해 데이터가 먼저 보이도록 했습니다."
+          icon={Activity}
+          stats={[
+            { label: '최저 단원', value: '38%', tone: 'danger' },
+            { label: '추세', value: '+7%', tone: 'success' },
+            { label: '주의 파트', value: '5개', tone: 'warning' },
+            { label: '분석 기간', value: '30일', tone: 'default' },
+          ]}
+        />
 
-        {/* Page Title */}
-        <div className="space-y-1">
-          <h1 className="linear-text-h2 tracking-tight text-linear-text-primary">취약점 분석</h1>
-          <p className="linear-text-small text-linear-text-tertiary">AI가 분석한 학습 패턴과 취약 영역을 확인하세요.</p>
-        </div>
-
-        {/* Top Row: Radar + Bar */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <RadarChart data={radarData} title="과목별 정답률" />
-          <BarChart
-            data={weeklyData}
-            dataKey="count"
-            title="요일별 풀이량"
-            color="#0f766e"
-            labelKey="name"
-          />
+          <BarChart data={weeklyData} dataKey="count" title="요일별 풀이량" color="#0f766e" labelKey="name" />
         </div>
 
-        {/* Heatmap */}
-        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)] overflow-hidden dark:bg-white/2 dark:border-white/8">
-          <div className="mb-4">
-            <h3 className="linear-text-body-medium text-linear-text-primary">파트별 취약도 히트맵</h3>
-            <p className="linear-text-caption text-linear-text-quaternary mt-1">각 셀의 색상은 정답률을 나타냅니다 — 빨강(낮음) → 노랑 → 초록(높음)</p>
-          </div>
-
-          {/* Legend */}
-          <div className="flex items-center gap-3 mb-4 flex-wrap">
-            {[
-              { label: '~45%', class: 'bg-[rgba(239,68,68,0.75)]' },
-              { label: '45~55%', class: 'bg-[rgba(239,68,68,0.5)]' },
-              { label: '55~65%', class: 'bg-[rgba(249,115,22,0.45)]' },
-              { label: '65~75%', class: 'bg-[rgba(234,179,8,0.45)]' },
-              { label: '75~85%', class: 'bg-[rgba(16,185,129,0.45)]' },
-              { label: '85%+', class: 'bg-[rgba(16,185,129,0.75)]' },
-            ].map((item) => (
-              <div key={item.label} className="flex items-center gap-1.5">
-                <div className={`w-3 h-3 rounded-sm ${item.class}`} />
-                <span className="text-linear-text-quaternary text-xs">{item.label}</span>
-              </div>
-            ))}
+        <SurfacePanel className="overflow-hidden p-6">
+          <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-linear-text-primary">파트별 취약도 히트맵</h3>
+              <p className="mt-1 text-xs text-linear-text-tertiary">색상은 정답률을 나타냅니다. 낮은 정답률일수록 붉은 계열로 표시됩니다.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {[
+                { label: '~45%', className: 'bg-red-500/70' },
+                { label: '55%', className: 'bg-orange-400/60' },
+                { label: '75%', className: 'bg-amber-400/60' },
+                { label: '85%+', className: 'bg-emerald-500/70' },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-1.5 text-xs text-linear-text-tertiary">
+                  <div className={cn('h-2.5 w-2.5 rounded-[3px]', item.className)} />
+                  {item.label}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2 overflow-x-auto">
             {heatmapData.map((row) => (
-              <div key={row.subject} className="flex items-center gap-2 min-w-0">
-                <div className="w-16 flex-shrink-0">
-                  <span className="text-linear-text-tertiary text-xs font-medium">{row.subject}</span>
+              <div key={row.subject} className="flex min-w-0 items-center gap-3 rounded-[10px] px-2 py-1.5 hover:bg-teal-50/50">
+                <div className="w-16 shrink-0">
+                  <span className="text-xs font-semibold text-linear-text-secondary">{row.subject}</span>
                 </div>
-                <div className="flex gap-1.5 flex-wrap">
+                <div className="flex flex-wrap gap-1.5">
                   {row.units.map((unit) => (
                     <div
                       key={unit.name}
                       title={`${unit.name}: ${unit.accuracy}%`}
-                      className={`${getHeatColor(unit.accuracy)} rounded-[4px] px-2.5 py-1.5 text-xs font-semibold cursor-default transition-opacity hover:opacity-80 whitespace-nowrap`}
+                      className={cn('cursor-default rounded-[6px] px-2.5 py-1.5 text-xs font-semibold transition-opacity hover:opacity-85', getHeatColor(unit.accuracy))}
                     >
                       <span>{unit.name}</span>
                       <span className="ml-1.5 opacity-80">{unit.accuracy}%</span>
@@ -240,9 +232,8 @@ export default function AnalyticsPage() {
               </div>
             ))}
           </div>
-        </div>
+        </SurfacePanel>
 
-        {/* Score Trend */}
         <LineChart
           data={trendData}
           lines={[
@@ -254,59 +245,43 @@ export default function AnalyticsPage() {
           title="최근 30일 과목별 성적 추이"
         />
 
-        {/* Top 5 Weakness */}
-        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)] dark:bg-white/2 dark:border-white/8">
-          <h3 className="linear-text-body-medium text-linear-text-primary mb-4">취약 파트 TOP 5</h3>
-          <div className="space-y-3">
+        <SurfacePanel className="overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-border px-5 py-4">
+            <Target className="h-4 w-4 text-linear-accent-violet" />
+            <div>
+              <h3 className="text-sm font-semibold text-linear-text-primary">취약 파트 TOP 5</h3>
+              <p className="mt-0.5 text-xs text-linear-text-tertiary">우선순위가 높은 복습 후보입니다.</p>
+            </div>
+          </div>
+          <div className="divide-y divide-border/70">
             {weaknessList.map((item) => {
               const Icon = item.icon;
               return (
-                <div
-                  key={item.rank}
-                  className="flex items-start gap-4 rounded-[6px] border border-transparent p-3 transition-colors hover:bg-black/3 hover:border-border dark:hover:bg-white/6 dark:hover:border-white/10"
-                >
-                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-border bg-white dark:border-white/8 dark:bg-white/4">
-                    <span className="text-linear-text-quaternary text-xs font-bold">{item.rank}</span>
+                <div key={item.rank} className="flex items-start gap-4 px-5 py-4 transition-colors hover:bg-teal-50/60">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-bold text-linear-text-tertiary">
+                    {item.rank}
                   </div>
-                  <div className={`flex-shrink-0 mt-0.5`}>
-                    <Icon className={`w-4 h-4 ${item.iconColor}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="linear-text-small-medium text-linear-text-secondary">
+                  <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', item.iconColor)} strokeWidth={1.7} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-medium text-linear-text-secondary">
                         {item.subject} &gt; {item.unit}
                       </span>
-                      <span
-                        className={`text-xs font-bold font-signature px-2 py-0.5 rounded-full ${
-                          item.accuracy < 50
-                            ? 'border border-red-500/25 bg-red-500/10 text-red-500'
-                            : item.accuracy < 65
-                            ? 'border border-yellow-500/25 bg-yellow-500/10 text-yellow-500'
-                            : 'border border-amber-400/25 bg-amber-400/10 text-amber-500'
-                        }`}
-                      >
+                      <span className={cn('rounded-full border px-2 py-0.5 text-xs font-semibold', accuracyTone(item.accuracy))}>
                         {item.accuracy}% 정답률
                       </span>
                     </div>
-                    <p className="linear-text-caption text-linear-text-quaternary mt-1">
-                      <span className="text-linear-accent-violet font-medium">AI 추천:</span> {item.recommendation}
+                    <p className="mt-1 text-xs leading-5 text-linear-text-tertiary">
+                      <span className="font-medium text-linear-accent-violet">AI 추천:</span> {item.recommendation}
                     </p>
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
+        </SurfacePanel>
 
-        {/* Weekly Pattern */}
-        <BarChart
-          data={weeklyData}
-          dataKey="count"
-          title="학습 패턴 분석"
-          color="#14b8a6"
-          labelKey="name"
-        />
-
+        <BarChart data={weeklyData} dataKey="count" title="학습 패턴 분석" color="#14b8a6" labelKey="name" />
       </div>
     </div>
   );

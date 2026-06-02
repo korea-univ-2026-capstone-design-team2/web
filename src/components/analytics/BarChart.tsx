@@ -47,7 +47,7 @@ export default function BarChart({
   labelKey = 'name',
 }: BarChartProps) {
   return (
-    <div className="rounded-[8px] border border-border bg-white/70 p-6 dark:bg-white/2">
+    <div className="rounded-[14px] border border-border bg-white p-6">
       {title && (
         <h3 className="mb-4 text-sm font-semibold text-linear-text-primary">{title}</h3>
       )}

@@ -55,3 +55,5 @@ api-develop/
 # Misc
 *.pem
 *.tmp
+.playwright-mcp/
+docs/

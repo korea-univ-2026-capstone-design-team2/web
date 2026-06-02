@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Zap } from 'lucide-react';
+import { ArrowRight, Brain, Zap } from 'lucide-react';
+import { PageHero } from '@/components/common/PageHero';
 
 // --- Inline Mock Data ---
 interface Question {
@@ -142,25 +143,16 @@ export default function RecommendPage() {
     <div className="min-h-screen bg-white px-4 py-8 md:px-8 text-linear-text-primary">
       <div className="max-w-6xl mx-auto space-y-6">
 
-        {/* Header */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <h1 className="linear-text-h2 tracking-tight text-linear-text-primary">AI 추천 문제</h1>
-          </div>
-          <p className="linear-text-small text-linear-text-tertiary">취약 파트 기반으로 선별된 맞춤 문제입니다</p>
-
-          {/* Stats */}
-          <div className="flex items-center gap-4 pt-1">
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-linear-brand-indigo" />
-              <span className="linear-text-caption text-linear-text-quaternary font-signature">분석된 취약 파트 5개</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-linear-status-emerald" />
-              <span className="linear-text-caption text-linear-text-quaternary font-signature">추천 문제 47개</span>
-            </div>
-          </div>
-        </div>
+        <PageHero
+          eyebrow="Recommendation"
+          title="AI 추천 문제"
+          description="취약 파트와 최근 오답 패턴을 기준으로 오늘 먼저 풀 문제를 정렬했습니다. 우선순위가 높은 문제부터 짧게 회전하세요."
+          icon={Brain}
+          stats={[
+            { label: '취약 파트', value: '5개', tone: 'brand' },
+            { label: '추천 문제', value: '47개', tone: 'success' },
+          ]}
+        />
 
         {/* Filter chips */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -173,7 +165,7 @@ export default function RecommendPage() {
                 className={`flex-shrink-0 px-3.5 py-1.5 rounded-full linear-text-small font-medium transition-colors ${
                   isActive
                     ? 'bg-linear-brand-indigo text-white border border-linear-brand-indigo'
-                    : 'border border-border bg-white text-linear-text-tertiary hover:bg-black/3 hover:text-linear-text-secondary dark:hover:bg-white/6'
+                    : 'border border-border bg-white text-linear-text-tertiary hover:bg-teal-50 hover:text-linear-text-secondary'
                 }`}
               >
                 {filter}
@@ -196,7 +188,7 @@ export default function RecommendPage() {
             return (
               <div
                 key={question.id}
-                className="bg-white border border-border rounded-[12px] p-5 hover:bg-black/2 transition-all shadow-[var(--shadow-level-1)] hover:shadow-[var(--shadow-level-2)] dark:hover:bg-white/6"
+                className="bg-white border border-border rounded-[12px] p-5 hover:bg-teal-50/50 transition-colors"
               >
                 {/* Top row */}
                 <div className="flex items-start justify-between gap-3 mb-3">

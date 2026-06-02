@@ -34,6 +34,7 @@
 - [[queries/2026-04-07-css-spacing-root-cause]] - padding/width/margin/gap이 깨진 원인과 재발 방지책은?
 - [[queries/2026-05-27-swagger-local-api-gap]] - Swagger와 로컬 기능/API 차이는 무엇인가?
 - [[queries/2026-06-01-backend-missing-api-contract]] - 백엔드 개발자에게 전달할 missing API 구조
+- [[queries/2026-06-02-batch-review-endpoint-usage]] - batch review endpoint 용도
 
 ## Lint
 - [[lint/2026-05-27T12-55-43]] - lint run
@@ -63,8 +64,13 @@
 - [[lint/2026-06-01T12-54-16]] - lint run
 - [[lint/2026-06-01T13-06-26]] - lint run
 - [[lint/2026-06-01T13-06-44]] - lint run
+- [[lint/2026-06-02T06-41-49]] - lint run
+- [[lint/2026-06-02T06-42-05]] - lint run
+- [[lint/2026-06-02T06-42-13]] - lint run
 
 ## Sessions
+- [[sessions/2026-06-02-surface-header-polish-followup]] - Surface/header polish 후속 수정
+- [[sessions/2026-06-01-surface-header-polish]] - Surface/header polish
 - [[sessions/2026-06-01-psat-exam-list-ui]] - PSAT 모의고사 목록 UI
 - [[sessions/2026-05-27-light-surface-white-polish]] - 라이트 모드 white surface 통일 정리
 - [[sessions/2026-05-27-backend-swagger-integration]] - 백엔드 Swagger API 연동

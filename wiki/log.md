@@ -115,3 +115,15 @@
 ## [2026-06-01 22:06] lint | issues=0
 
 ## [2026-06-01 22:06] lint | issues=0
+
+## [2026-06-01 22:46] session | Surface Header Polish
+
+## [2026-06-02 15:39] query | batch review endpoint 용도
+
+## [2026-06-02 15:39] session | Surface Header Polish Follow-up
+
+## [2026-06-02 15:41] lint | issues=2
+
+## [2026-06-02 15:42] lint | issues=0
+
+## [2026-06-02 15:42] lint | issues=0

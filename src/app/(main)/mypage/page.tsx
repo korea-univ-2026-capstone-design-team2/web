@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { PageHero, SurfacePanel } from '@/components/common/PageHero';
 import {
+  UserRound,
   BookOpen,
   Clock,
   Target,
@@ -95,22 +97,22 @@ const mockBookmarks = [
 function generateMockActivity(): number[] {
   const days = 52 * 7;
   return Array.from({ length: days }, (_, i) => {
-    const rand = Math.random();
-    // Recent weeks more active
-    const recencyBoost = i > days * 0.7 ? 1.5 : 1;
-    if (rand < 0.3 * recencyBoost) return 0;
-    if (rand < 0.55 * recencyBoost) return Math.floor(Math.random() * 5) + 1;
-    if (rand < 0.78 * recencyBoost) return Math.floor(Math.random() * 10) + 6;
-    return Math.floor(Math.random() * 10) + 16;
+    const wave = Math.abs(Math.sin(i * 12.9898) * Math.cos(i * 0.618));
+    const recencyBoost = i > days * 0.7 ? 1.25 : 1;
+    const score = wave * recencyBoost;
+    if (score < 0.24) return 0;
+    if (score < 0.48) return (i % 5) + 1;
+    if (score < 0.72) return (i % 10) + 6;
+    return (i % 10) + 16;
   });
 }
 
 const activityData = generateMockActivity();
 
 function getActivityColor(count: number): string {
-  if (count === 0) return "#191a1b";
-  if (count <= 5) return "#1e3a5f";
-  if (count <= 15) return "#2563eb";
+  if (count === 0) return "#eef2f7";
+  if (count <= 5) return "#ccfbf1";
+  if (count <= 15) return "#5eead4";
   return "#0f766e";
 }
 
@@ -246,14 +248,19 @@ export default function MyPage() {
   return (
     <div className="min-h-screen bg-white px-4 py-8 text-linear-text-primary md:px-8">
       <div className="mx-auto max-w-6xl space-y-8">
-        {/* Page Header */}
-        <div>
-          <h1 className="linear-text-h2 text-linear-text-primary mb-1">마이페이지</h1>
-          <p className="linear-text-small text-linear-text-quaternary">학습 현황과 계정 설정을 관리하세요</p>
-        </div>
+        <PageHero
+          eyebrow="Profile"
+          title="내 학습 프로필"
+          description="계정 정보, 저장한 문제, 학습 활동을 한 화면에서 관리합니다. 반복 표면은 낮추고 필요한 상태만 또렷하게 남겼습니다."
+          icon={UserRound}
+          stats={[
+            { label: '목표 시험', value: mockUser.targetExam, tone: 'brand' },
+            { label: '목표 점수', value: `${mockUser.targetScore}점`, tone: 'success' },
+          ]}
+        />
 
         {/* Profile Card */}
-        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
+        <SurfacePanel className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-start gap-6">
             {/* Avatar */}
             <div className="h-16 w-16 rounded-full bg-linear-brand-indigo/10 border border-linear-brand-indigo/20 flex items-center justify-center flex-shrink-0">
@@ -276,14 +283,14 @@ export default function MyPage() {
                     </span>
                   </div>
                 </div>
-                <button className="flex items-center gap-1.5 text-xs font-signature text-linear-text-tertiary bg-white border border-border rounded-[6px] px-3 py-2 hover:bg-black/3 hover:text-linear-text-secondary transition-colors flex-shrink-0 dark:hover:bg-white/6">
+                <button className="flex items-center gap-1.5 text-xs font-signature text-linear-text-tertiary bg-white border border-border rounded-[6px] px-3 py-2 hover:bg-teal-50 hover:text-linear-text-secondary transition-colors flex-shrink-0 dark:hover:bg-white/6">
                   <Pencil size={14} strokeWidth={1.5} />
                   프로필 수정
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </SurfacePanel>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -292,7 +299,7 @@ export default function MyPage() {
             return (
               <div
                 key={stat.label}
-                className="bg-white border border-border rounded-[12px] p-5 shadow-[var(--shadow-level-2)]"
+                className="rounded-[14px] border border-border bg-white p-5"
               >
                 <div
                   className={`h-8 w-8 rounded-[8px] ${stat.bgColor} flex items-center justify-center mb-4`}
@@ -312,7 +319,7 @@ export default function MyPage() {
         </div>
 
         {/* Learning Calendar */}
-        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
+        <SurfacePanel className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="linear-text-body-medium text-linear-text-primary">학습 캘린더</h2>
@@ -327,10 +334,10 @@ export default function MyPage() {
             </div>
           </div>
           <CalendarHeatmap />
-        </div>
+        </SurfacePanel>
 
         {/* Bookmarks */}
-        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
+        <SurfacePanel className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="linear-text-body-medium text-linear-text-primary">북마크된 문제</h2>
@@ -342,11 +349,11 @@ export default function MyPage() {
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div className="divide-y divide-border/70">
             {mockBookmarks.map((bookmark) => (
               <div
                 key={bookmark.id}
-                className="flex items-start justify-between gap-4 p-4 bg-white border border-border rounded-[8px] hover:bg-black/2 transition-all group shadow-[var(--shadow-level-2)] dark:hover:bg-white/6"
+                className="flex items-start justify-between gap-4 rounded-[10px] px-3 py-3 transition-colors group hover:bg-teal-50/60"
               >
                 <div className="flex items-start gap-3 min-w-0">
                   <BookMarked size={16} strokeWidth={1.5} className="text-linear-accent-violet flex-shrink-0 mt-0.5" />
@@ -362,16 +369,16 @@ export default function MyPage() {
                     </div>
                   </div>
                 </div>
-                <button className="flex-shrink-0 linear-text-label text-linear-text-tertiary border border-border rounded-[6px] px-3 py-1.5 hover:text-linear-text-primary hover:bg-black/3 transition-colors whitespace-nowrap shadow-[var(--shadow-level-1)] dark:hover:bg-white/6">
+                <button className="flex-shrink-0 rounded-[6px] border border-border bg-white px-3 py-1.5 linear-text-label text-linear-text-tertiary transition-colors hover:bg-teal-50 hover:text-linear-text-primary whitespace-nowrap">
                   풀기
                 </button>
               </div>
             ))}
           </div>
-        </div>
+        </SurfacePanel>
 
         {/* Settings */}
-        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
+        <SurfacePanel className="p-6">
           <h2 className="linear-text-body-medium text-linear-text-primary mb-1">알림 설정</h2>
           <p className="linear-text-small text-linear-text-quaternary mb-6">알림 수신 방법을 설정하세요</p>
 
@@ -402,7 +409,7 @@ export default function MyPage() {
               <ToggleSwitchInline defaultChecked={false} />
             </div>
           </div>
-        </div>
+        </SurfacePanel>
 
         {/* Danger Zone */}
         <div className="pb-8">

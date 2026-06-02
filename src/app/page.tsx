@@ -122,12 +122,6 @@ export default function LandingPage() {
             <Link href="/login" className="rounded-[8px] px-3 py-2 text-sm text-linear-text-tertiary transition-colors hover:text-linear-text-primary">
               로그인
             </Link>
-            <Link
-              href="/signup"
-              className="rounded-[8px] bg-linear-brand-indigo px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-linear-accent-hover"
-            >
-              시작하기
-            </Link>
           </div>
         </div>
       </header>
@@ -137,10 +131,6 @@ export default function LandingPage() {
           <div className="absolute inset-0 -z-10 opacity-60 [background-image:radial-gradient(circle_at_14%_18%,rgba(15,118,110,0.16),transparent_40%),radial-gradient(circle_at_86%_14%,rgba(20,184,166,0.14),transparent_36%),radial-gradient(circle_at_70%_75%,rgba(16,185,129,0.12),transparent_40%)]" />
           <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
             <div>
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-white/70 px-4 py-1.5 text-xs text-linear-text-tertiary dark:bg-white/5">
-                <span className="h-1.5 w-1.5 rounded-full bg-linear-status-emerald" />
-                공무원 수험생 학습 플랫폼
-              </div>
 
               <h1 className="mb-6 text-balance text-4xl font-semibold leading-tight tracking-tight text-linear-text-primary md:text-6xl">
                 공무원 시험 준비,
@@ -284,27 +274,6 @@ export default function LandingPage() {
                   </div>
                 </article>
               ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="cta" className="px-6 py-20 sm:py-24">
-          <div className="mx-auto max-w-4xl">
-            <div className="relative overflow-hidden rounded-[16px] border border-linear-brand-indigo/20 bg-linear-brand-indigo/5 px-6 py-14 text-center shadow-[var(--shadow-level-2)] sm:px-12">
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-linear-brand-indigo/8 via-transparent to-linear-status-emerald/6" />
-              <div className="relative z-10">
-                <h2 className="mb-4 text-3xl font-semibold tracking-tight text-linear-text-primary md:text-5xl">지금 학습 루틴을 시작해보세요</h2>
-                <p className="mx-auto mb-8 max-w-lg text-linear-text-tertiary">
-                  가입 후 바로 진단부터 풀이, 복습 루틴까지 이어서 학습할 수 있습니다.
-                </p>
-                <Link
-                  href="/signup"
-                  className="inline-flex items-center gap-2 rounded-[8px] bg-linear-brand-indigo px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-linear-accent-hover"
-                >
-                  무료로 회원가입
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
             </div>
           </div>
         </section>

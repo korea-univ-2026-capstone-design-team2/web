@@ -10,11 +10,13 @@ import {
   ChevronRight,
   Clock,
   ArrowRight,
+  Sparkles,
+  LayoutDashboard,
 } from 'lucide-react';
 import RadarChart from '@/components/analytics/RadarChart';
 import LineChart from '@/components/analytics/LineChart';
+import { PageHero, SurfacePanel } from '@/components/common/PageHero';
 
-// --- Mock Data ---
 const radarData = [
   { subject: '국어', score: 79 },
   { subject: '영어', score: 68 },
@@ -26,7 +28,7 @@ const radarData = [
 
 function generate30DaysData() {
   const data = [];
-  const now = new Date(2026, 3, 2); // April 2, 2026
+  const now = new Date(2026, 3, 2);
   for (let i = 29; i >= 0; i--) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
@@ -34,7 +36,7 @@ function generate30DaysData() {
     const day = d.getDate();
     const base = 68;
     const trend = ((29 - i) / 29) * 8;
-    const noise = (Math.sin(i * 2.5) * 6 + Math.cos(i * 1.3) * 4);
+    const noise = Math.sin(i * 2.5) * 6 + Math.cos(i * 1.3) * 4;
     const score = Math.min(100, Math.max(40, Math.round(base + trend + noise)));
     data.push({ date: `${month}/${day}`, score });
   }
@@ -88,66 +90,62 @@ export default function DashboardPage() {
   const trendData = useMemo(() => generate30DaysData(), []);
 
   return (
-    <div className="min-h-screen bg-white px-4 py-8 md:px-8 text-linear-text-primary">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-white px-4 py-8 text-linear-text-primary md:px-8">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <PageHero
+          eyebrow="Dashboard"
+          title="오늘의 학습 현황"
+          description="흩어진 풀이 기록을 하나의 작업 보드처럼 정리했습니다. 오늘 집중할 영역과 최근 흐름을 먼저 확인하세요."
+          icon={LayoutDashboard}
+          stats={[
+            { label: '오늘 풀이', value: '47', tone: 'brand' },
+            { label: '정답률', value: '78.7%', tone: 'success' },
+            { label: '연속', value: '14일', tone: 'warning' },
+            { label: '전체', value: '74.2%', tone: 'default' },
+          ]}
+        />
 
-        {/* Header Greeting */}
-        <div className="space-y-1">
-          <h1 className="linear-text-h2 text-linear-text-primary tracking-tight">안녕하세요, 양인용님!</h1>
-          <p className="linear-text-small text-linear-text-tertiary">오늘도 목표를 향해 꾸준히 나아가고 있어요.</p>
-        </div>
-
-        {/* AI Recommendation Banner */}
-        <div className="bg-white border border-border rounded-[12px] p-4 flex gap-4 shadow-[var(--shadow-level-2)]">
-          <div className="w-1 rounded-full bg-linear-brand-indigo flex-shrink-0" />
-          <div className="space-y-0.5">
-            <p className="text-xs font-medium uppercase tracking-wide text-linear-text-tertiary">AI 추천</p>
-            <p className="linear-text-small text-linear-text-secondary leading-relaxed">
-              오늘은 행정법 3단원{' '}
-              <span className="text-linear-accent-violet font-medium">&#39;행정행위의 효력&#39;</span>을 집중 공략하세요!
-              지난 3회 연속 해당 단원에서 오답이 발생했습니다.
-            </p>
+        <SurfacePanel className="overflow-hidden border-linear-brand-indigo/20 bg-[linear-gradient(135deg,rgba(15,118,110,0.08),#ffffff_46%)] p-5">
+          <div className="flex gap-4">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-linear-brand-indigo text-white">
+              <Sparkles className="h-4 w-4" strokeWidth={1.7} />
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-linear-accent-violet">AI 추천</p>
+              <p className="text-sm leading-6 text-linear-text-secondary">
+                오늘은 행정법 3단원{' '}
+                <span className="font-medium text-linear-text-primary">&#39;행정행위의 효력&#39;</span>을 집중 공략하세요.
+                지난 3회 연속 해당 단원에서 오답이 발생했습니다.
+              </p>
+            </div>
           </div>
-        </div>
+        </SurfacePanel>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {statCards.map((card) => {
             const Icon = card.icon;
             return (
-              <div
-                key={card.label}
-                className="bg-white border border-border rounded-[12px] p-5 space-y-3 shadow-[var(--shadow-level-2)]"
-              >
+              <SurfacePanel key={card.label} className="p-5">
                 <div className="flex items-center justify-between">
-                  <div className={`${card.iconBg} rounded-[6px] p-2`}>
-                    <Icon className={`w-4 h-4 ${card.iconColor}`} />
+                  <div className={`${card.iconBg} rounded-[8px] p-2.5`}>
+                    <Icon className={`h-4 w-4 ${card.iconColor}`} strokeWidth={1.7} />
                   </div>
                   {card.badge && (
-                    <span
-                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        card.badge.positive
-                          ? 'bg-linear-status-emerald/10 text-linear-status-emerald'
-                          : 'bg-red-500/10 text-red-500'
-                      }`}
-                    >
+                    <span className="rounded-full bg-linear-status-emerald/10 px-2 py-0.5 text-xs font-medium text-linear-status-emerald">
                       {card.badge.label}
                     </span>
                   )}
                 </div>
-                <div>
-                  <p className="linear-text-h3 text-linear-text-primary tracking-tight">
-                    {card.value}
-                  </p>
-                  <p className="linear-text-label text-linear-text-quaternary mt-1">{card.label}</p>
+                <div className="mt-4">
+                  <p className="text-2xl font-semibold tracking-[-0.04em] text-linear-text-primary">{card.value}</p>
+                  <p className="mt-1 text-xs font-medium text-linear-text-tertiary">{card.label}</p>
                 </div>
-              </div>
+              </SurfacePanel>
             );
           })}
         </div>
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <RadarChart data={radarData} title="과목별 정답률" />
           <LineChart
             data={trendData}
@@ -156,80 +154,65 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Recent Results */}
-        <div className="bg-white border border-border rounded-[12px] p-6 shadow-[var(--shadow-level-2)]">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="linear-text-body-medium text-linear-text-primary">최근 응시 결과</h3>
+        <SurfacePanel className="overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <div>
+              <h3 className="text-sm font-semibold text-linear-text-primary">최근 응시 결과</h3>
+              <p className="mt-0.5 text-xs text-linear-text-tertiary">최근 풀이 이력과 점수 흐름</p>
+            </div>
             <Link
               href="/mypage"
-              className="linear-text-caption text-linear-accent-violet hover:text-linear-text-primary transition-colors flex items-center gap-1"
+              className="flex items-center gap-1 text-xs font-medium text-linear-accent-violet transition-colors hover:text-linear-text-primary"
             >
               전체보기
-              <ChevronRight className="w-3 h-3" strokeWidth={1.5} />
+              <ChevronRight className="h-3 w-3" strokeWidth={1.5} />
             </Link>
           </div>
 
-          <div className="space-y-2">
+          <div className="divide-y divide-border/70">
             {recentResults.map((result) => (
-              <div
-                key={result.id}
-                className="flex items-center gap-3 p-3 rounded-[8px] hover:bg-black/2 transition-colors group border border-transparent hover:border-border dark:hover:bg-white/6"
-              >
-                <div
-                  className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                    result.passed ? 'bg-linear-status-emerald' : 'bg-red-500'
-                  }`}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="linear-text-small-medium text-linear-text-secondary truncate">{result.name}</p>
-                  <div className="flex items-center gap-3 mt-0.5">
-                    <span className="linear-text-caption text-linear-text-quaternary font-signature">{result.date}</span>
-                    <span className="flex items-center gap-1 linear-text-caption text-linear-text-quaternary font-signature">
-                      <Clock className="w-3 h-3" strokeWidth={1.5} />
+              <div key={result.id} className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-teal-50/60">
+                <div className={`h-2 w-2 shrink-0 rounded-full ${result.passed ? 'bg-linear-status-emerald' : 'bg-red-500'}`} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-linear-text-secondary">{result.name}</p>
+                  <div className="mt-0.5 flex items-center gap-3 text-xs text-linear-text-tertiary">
+                    <span>{result.date}</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" strokeWidth={1.5} />
                       {result.duration}
                     </span>
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <span
-                    className={`text-sm font-bold font-signature ${
-                      result.score >= 75 ? 'text-linear-status-emerald' : 'text-red-500'
-                    }`}
-                  >
+                <div className="shrink-0 text-right">
+                  <span className={`text-sm font-semibold ${result.score >= 75 ? 'text-linear-status-emerald' : 'text-red-500'}`}>
                     {result.score}점
                   </span>
-                  <p
-                    className={`linear-text-caption mt-0.5 ${
-                      result.passed ? 'text-linear-status-emerald' : 'text-red-500'
-                    }`}
-                  >
+                  <p className={`mt-0.5 text-xs ${result.passed ? 'text-linear-status-emerald' : 'text-red-500'}`}>
                     {result.passed ? '합격권' : '불합격권'}
                   </p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </SurfacePanel>
 
-        {/* Quick Start */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <Link
             href="/exam"
-            className="flex-1 flex items-center justify-center gap-2 bg-linear-brand-indigo hover:opacity-90 text-white font-medium py-3 px-6 rounded-[8px] transition-colors text-sm"
+            className="flex flex-1 items-center justify-center gap-2 rounded-[8px] bg-linear-brand-indigo px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-linear-brand-indigo/90"
           >
-            <BookOpen className="w-4 h-4" strokeWidth={1.5} />
+            <BookOpen className="h-4 w-4" strokeWidth={1.5} />
             시험 응시하기
-            <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+            <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
           </Link>
           <Link
             href="/recommend"
-            className="flex-1 flex items-center justify-center gap-2 rounded-[8px] border border-border bg-white px-6 py-3 text-sm font-medium text-linear-text-secondary transition-colors hover:bg-black/3 dark:border-white/8 dark:bg-white/2 dark:hover:bg-white/5"
+            className="flex flex-1 items-center justify-center gap-2 rounded-[8px] border border-border bg-white px-6 py-3 text-sm font-medium text-linear-text-secondary transition-colors hover:bg-teal-50"
           >
             취약파트 풀기
-            <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+            <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
           </Link>
         </div>
-
       </div>
     </div>
   );
