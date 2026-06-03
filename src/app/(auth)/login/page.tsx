@@ -42,7 +42,7 @@ export default function LoginPage() {
     <div className="space-y-7">
       <div className="text-center">
         <Link href="/" className="inline-flex items-center gap-2">
-          <span className="font-semibold text-foreground text-xl lowercase tracking-tight">oh-my-study</span>
+          <span className="font-semibold text-foreground text-xl tracking-tight">PassFinder</span>
         </Link>
         <h1 className="mt-6 text-2xl font-semibold text-foreground">다시 오셨군요</h1>
         <p className="mt-2 text-sm text-linear-text-tertiary">계정에 로그인하세요</p>

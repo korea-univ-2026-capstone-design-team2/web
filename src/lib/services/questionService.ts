@@ -1,6 +1,8 @@
 import type { Question, RecommendedQuestion } from '@/types';
 import type {
   CreateQuestionResDto,
+  GetQuestionPapersReqDto,
+  GetQuestionReviewsReqDto,
   QuestionDetail,
   QuestionDetailView,
   QuestionPaper,
@@ -51,7 +53,7 @@ function normalizeReviewView(view: QuestionReviewView): QuestionReview[] {
     choices: item.choices.map((choice) => ({
       number: choice.number,
       text: choice.text,
-      isCorrect: choice.correct,
+      isCorrect: choice.isCorrect,
     })),
   }));
 }
@@ -71,7 +73,7 @@ function normalizeDetailView(view: QuestionDetailView): QuestionDetail | undefin
     choices: first.choices.map((choice) => ({
       number: choice.number,
       text: choice.text,
-      isCorrect: choice.correct,
+      isCorrect: choice.isCorrect,
     })),
     status: first.status,
     qualityScore: first.qualityScore,
@@ -176,6 +178,16 @@ export const questionService = {
     return apiRequest<QuestionDetailView>(`/questions/${questionId}/detail`);
   },
 
+  getQuestionPaperViewsByIds: async (questionIds: number[]): Promise<QuestionPaperView[]> => {
+    const body: GetQuestionPapersReqDto = { questionIds };
+    return apiRequest<QuestionPaperView[]>('/questions/papers', { method: 'POST', body });
+  },
+
+  getQuestionReviewViewsByIds: async (questionIds: number[]): Promise<QuestionReviewView[]> => {
+    const body: GetQuestionReviewsReqDto = { questionIds };
+    return apiRequest<QuestionReviewView[]>('/questions/reviews', { method: 'POST', body });
+  },
+
   getQuestionPapers: async (): Promise<QuestionPaper[]> => {
     return Promise.resolve(mockQuestions.map((question, index) => toQuestionPaperDto(question, index)));
   },
@@ -185,7 +197,7 @@ export const questionService = {
 
     if (hasApiBaseUrl()) {
       try {
-        const views = await Promise.all(questionIds.map((questionId) => questionService.getQuestionPaperView(questionId)));
+        const views = await questionService.getQuestionPaperViewsByIds(questionIds);
         return views.flatMap(normalizePaperView);
       } catch {
         // Keep local development usable when the configured backend is unavailable.
@@ -204,7 +216,7 @@ export const questionService = {
 
     if (hasApiBaseUrl()) {
       try {
-        const views = await Promise.all(questionIds.map((questionId) => questionService.getQuestionReviewView(questionId)));
+        const views = await questionService.getQuestionReviewViewsByIds(questionIds);
         return views.flatMap(normalizeReviewView);
       } catch {
         // Keep local development usable when the configured backend is unavailable.

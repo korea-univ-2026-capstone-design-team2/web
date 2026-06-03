@@ -11,7 +11,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme/theme-toggle'
 
 interface NavItem {
   label: string
@@ -45,8 +44,8 @@ export function Sidebar({ onNavClick, collapsed = false, onToggleCollapse }: Sid
         <div className={['flex items-center', collapsed ? 'justify-center' : 'justify-between gap-2'].join(' ')}>
           <Link href="/dashboard" className="flex items-center gap-2" onClick={onNavClick}>
             {!collapsed && (
-              <span className="text-linear-brand-indigo font-semibold text-lg tracking-tight select-none lowercase">
-                oh-my-study
+              <span className="text-linear-brand-indigo font-semibold text-lg tracking-tight select-none">
+                PassFinder
               </span>
             )}
           </Link>
@@ -109,9 +108,6 @@ export function Sidebar({ onNavClick, collapsed = false, onToggleCollapse }: Sid
           )}
         </div>
 
-        <div className={collapsed ? 'pt-1.5 flex justify-center' : 'px-3 pt-1.5'}>
-          <ThemeToggle className={collapsed ? '' : 'w-full rounded-[8px] justify-center'} />
-        </div>
       </div>
     </aside>
   )

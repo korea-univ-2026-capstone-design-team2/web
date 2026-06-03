@@ -126,4 +126,20 @@
 
 ## [2026-06-02 15:42] lint | issues=0
 
+## [2026-06-02 16:05] decision | Single light theme v1
+
+## [2026-06-02 16:05] session | Single light theme
+
 ## [2026-06-02 15:42] lint | issues=0
+
+## [2026-06-02 16:05] lint | issues=0
+
+## [2026-06-02 16:09] lint | issues=0
+
+## [2026-06-02 16:35] session | Question batch POST integration
+
+## [2026-06-02 16:35] lint | issues=0
+
+## [2026-06-02 16:36] lint | issues=0
+
+## [2026-06-02 16:36] lint | issues=0

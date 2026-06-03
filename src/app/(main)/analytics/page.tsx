@@ -175,7 +175,7 @@ export default function AnalyticsPage() {
         <PageHero
           eyebrow="Analysis"
           title="취약 영역 분석"
-          description="정답률이 낮은 단원과 최근 성적 흐름을 같은 기준으로 정렬했습니다. 색은 강하게, 표면은 낮게 유지해 데이터가 먼저 보이도록 했습니다."
+          description="취약한 영역과 최근 성적 흐름을 확인하세요."
           icon={Activity}
           stats={[
             { label: '최저 단원', value: '38%', tone: 'danger' },

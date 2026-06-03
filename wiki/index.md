@@ -24,6 +24,7 @@
 ## Decisions
 - [[decisions/wiki-governance-v1]] - wiki 운영 규칙 v1 채택
 - [[decisions/ui-theme-and-layout-foundation-v1]] - light-first + token-first UI 기반 확정
+- [[decisions/single-light-theme-v1]] - dark/light 전환 제거 및 단일 light 테마 확정
 - [[decisions/brand-color-teal-and-light-contrast-v1]] - 보라→teal 브랜드 전환 및 화이트 대비 보정
 - [[decisions/exam-session-omr-layout-v1]] - 시험 세션 OMR 2열 레이아웃 확정
 - [[decisions/question-id-number-standard-v1]] - questionId number 표준화
@@ -34,7 +35,7 @@
 - [[queries/2026-04-07-css-spacing-root-cause]] - padding/width/margin/gap이 깨진 원인과 재발 방지책은?
 - [[queries/2026-05-27-swagger-local-api-gap]] - Swagger와 로컬 기능/API 차이는 무엇인가?
 - [[queries/2026-06-01-backend-missing-api-contract]] - 백엔드 개발자에게 전달할 missing API 구조
-- [[queries/2026-06-02-batch-review-endpoint-usage]] - batch review endpoint 용도
+- [[queries/2026-06-02-batch-review-endpoint-usage]] - 다건 해설지 조회 용도
 
 ## Lint
 - [[lint/2026-05-27T12-55-43]] - lint run
@@ -67,8 +68,15 @@
 - [[lint/2026-06-02T06-41-49]] - lint run
 - [[lint/2026-06-02T06-42-05]] - lint run
 - [[lint/2026-06-02T06-42-13]] - lint run
+- [[lint/2026-06-02T07-05-31]] - lint run
+- [[lint/2026-06-02T07-09-17]] - lint run
+- [[lint/2026-06-02T07-35-51]] - lint run
+- [[lint/2026-06-02T07-36-21]] - lint run
+- [[lint/2026-06-02T07-36-43]] - lint run
 
 ## Sessions
+- [[sessions/2026-06-02-question-batch-post-integration]] - Question batch POST integration
+- [[sessions/2026-06-02-single-light-theme]] - Single light theme
 - [[sessions/2026-06-02-surface-header-polish-followup]] - Surface/header polish 후속 수정
 - [[sessions/2026-06-01-surface-header-polish]] - Surface/header polish
 - [[sessions/2026-06-01-psat-exam-list-ui]] - PSAT 모의고사 목록 UI

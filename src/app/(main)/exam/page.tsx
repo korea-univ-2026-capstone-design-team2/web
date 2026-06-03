@@ -112,7 +112,7 @@ export default function ExamPage() {
               <div className="space-y-2">
                 <h1 className="linear-text-h2 tracking-tight text-linear-text-primary">PSAT 모의고사 목록</h1>
                 <p className="max-w-2xl text-sm leading-6 text-linear-text-tertiary">
-                  백엔드에 생성된 PSAT 모의고사만 표시합니다. 응시 가능한 시험을 선택하면 실제 문항지 데이터를 불러와 CBT 화면으로 이동합니다.
+                  시험을 선택하면 CBT 화면으로 이동합니다.
                 </p>
               </div>
             </div>
@@ -172,7 +172,6 @@ export default function ExamPage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-linear-text-primary">생성된 모의고사가 없습니다.</p>
-                <p className="mt-1 text-sm text-linear-text-tertiary">백엔드에서 PSAT 모의고사를 생성한 뒤 다시 확인하세요.</p>
               </div>
             </div>
           ) : (

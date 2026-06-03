@@ -95,7 +95,7 @@ export default function DashboardPage() {
         <PageHero
           eyebrow="Dashboard"
           title="오늘의 학습 현황"
-          description="흩어진 풀이 기록을 하나의 작업 보드처럼 정리했습니다. 오늘 집중할 영역과 최근 흐름을 먼저 확인하세요."
+          description="오늘 집중할 영역과 최근 흐름을 먼저 확인하세요."
           icon={LayoutDashboard}
           stats={[
             { label: '오늘 풀이', value: '47', tone: 'brand' },

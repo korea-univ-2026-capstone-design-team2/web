@@ -66,10 +66,10 @@ export default function SignupPage() {
     <div className="space-y-7">
       <div className="text-center">
         <Link href="/" className="inline-flex items-center gap-2">
-          <span className="font-semibold text-foreground text-xl lowercase tracking-tight">oh-my-study</span>
+          <span className="font-semibold text-foreground text-xl tracking-tight">PassFinder</span>
         </Link>
         <h1 className="mt-6 text-2xl font-semibold text-foreground">계정 만들기</h1>
-        <p className="mt-2 text-sm text-linear-text-tertiary">무료로 시작하세요. 신용카드 불필요.</p>
+        <p className="mt-2 text-sm text-linear-text-tertiary">무료로 시작하세요.</p>
       </div>
 
       <div className="rounded-[12px] border border-border bg-white/70 p-6 shadow-[var(--shadow-level-2)] backdrop-blur-sm dark:bg-white/2">

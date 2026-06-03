@@ -46,7 +46,7 @@ export interface AnswerChoiceView {
 }
 
 export interface AnswerChoiceViewWithAnswer extends AnswerChoiceView {
-  correct: boolean;
+  isCorrect: boolean;
 }
 
 export interface QuestionItemPropositionView {
@@ -89,6 +89,14 @@ export interface QuestionItemReviewView extends Omit<QuestionItemPaperView, 'cho
 
 export interface QuestionReviewView extends Omit<QuestionPaperView, 'items'> {
   items: QuestionItemReviewView[];
+}
+
+export interface GetQuestionPapersReqDto {
+  questionIds: number[];
+}
+
+export interface GetQuestionReviewsReqDto {
+  questionIds: number[];
 }
 
 export interface QuestionItemDetailView extends QuestionItemReviewView {

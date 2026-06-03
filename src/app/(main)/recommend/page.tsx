@@ -146,7 +146,7 @@ export default function RecommendPage() {
         <PageHero
           eyebrow="Recommendation"
           title="AI 추천 문제"
-          description="취약 파트와 최근 오답 패턴을 기준으로 오늘 먼저 풀 문제를 정렬했습니다. 우선순위가 높은 문제부터 짧게 회전하세요."
+          description="취약 파트와 최근 오답 패턴을 기준으로 오늘 먼저 풀 문제를 확인하세요."
           icon={Brain}
           stats={[
             { label: '취약 파트', value: '5개', tone: 'brand' },

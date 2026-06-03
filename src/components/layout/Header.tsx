@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { Menu } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme/theme-toggle'
 
 interface HeaderProps {
   onMenuClick: () => void
@@ -13,13 +12,12 @@ export function Header({ onMenuClick }: HeaderProps) {
     <header className="flex items-center justify-between px-4 h-14 bg-linear-bg-panel border-b border-border lg:hidden sticky top-0 z-30">
       {/* Logo */}
       <Link href="/dashboard" className="flex items-center gap-2">
-        <span className="text-linear-brand-indigo font-semibold text-base tracking-tight select-none lowercase">
-          oh-my-study
+        <span className="text-linear-brand-indigo font-semibold text-base tracking-tight select-none">
+          PassFinder
         </span>
       </Link>
 
       <div className="flex items-center gap-2">
-        <ThemeToggle />
         <button
           type="button"
           onClick={onMenuClick}

@@ -6,9 +6,9 @@ export function Footer() {
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex flex-col items-center sm:items-start gap-1">
-          <span className="text-linear-brand-indigo font-semibold text-sm tracking-tight lowercase">oh-my-study</span>
+          <span className="text-linear-brand-indigo font-semibold text-sm tracking-tight">PassFinder</span>
           <p className="text-linear-text-quaternary text-xs">
-            © {new Date().getFullYear()} oh-my-study. All rights reserved.
+            © {new Date().getFullYear()} PassFinder. All rights reserved.
           </p>
         </div>
 
