@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
@@ -10,17 +11,56 @@ import {
   Clock,
   FileText,
   Loader2,
+  Plus,
   Play,
   RefreshCw,
+  Sparkles,
   XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { hasApiBaseUrl } from '@/lib/api/client';
 import { examService } from '@/lib/services/examService';
-import type { ExamStatus, ExamSummaryResDto } from '@/types/question-dto';
+import type { DifficultyLevel, ExamStatus, ExamSummaryResDto, GenerateExamReqDto, QuestionType, Subject, TopicCategory } from '@/types/question-dto';
 import { DIFFICULTY_LABEL, QUESTION_TYPE_LABEL, SUBJECT_LABEL } from '@/types/question-dto';
+import { PageHero, SurfacePanel } from '@/components/common/PageHero';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 20;
+
+const SUBJECT_OPTIONS: { value: Subject; label: string }[] = [
+  { value: 'VERBAL_LOGIC', label: '언어논리' },
+  { value: 'DATA_INTERPRETATION', label: '자료해석' },
+  { value: 'SITUATIONAL_JUDGMENT', label: '상황판단' },
+];
+
+const QUESTION_TYPE_OPTIONS: { value: QuestionType; label: string }[] = [
+  { value: 'READING', label: '독해' },
+  { value: 'LOGIC_PUZZLE', label: '논리퀴즈' },
+  { value: 'ARGUMENTATION', label: '논증' },
+];
+
+const DIFFICULTY_OPTIONS: { value: DifficultyLevel; label: string }[] = [
+  { value: 'EASY', label: '쉬움' },
+  { value: 'MEDIUM', label: '보통' },
+  { value: 'HARD', label: '어려움' },
+];
+
+const TOPIC_CATEGORY_OPTIONS: { value: TopicCategory; label: string }[] = [
+  { value: 'POLITICS', label: '정치' },
+  { value: 'ECONOMY', label: '경제' },
+  { value: 'SOCIETY', label: '사회' },
+  { value: 'LAW', label: '법' },
+  { value: 'HISTORY', label: '역사' },
+  { value: 'PHILOSOPHY', label: '철학' },
+  { value: 'SCIENCE', label: '과학' },
+  { value: 'TECHNOLOGY', label: '기술' },
+  { value: 'CULTURE', label: '문화' },
+  { value: 'ENVIRONMENT', label: '환경' },
+];
+
+const fieldClassName =
+  'h-10 w-full rounded-[8px] border border-border bg-white px-3 text-sm text-linear-text-primary outline-none transition-colors focus:border-linear-brand-indigo focus:ring-2 focus:ring-linear-brand-indigo/15';
 
 const STATUS_LABEL: Record<ExamStatus, string> = {
   GENERATING: '생성 중',
@@ -58,6 +98,20 @@ export default function ExamPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createForm, setCreateForm] = useState<GenerateExamReqDto>({
+    title: 'PSAT 실전 모의고사',
+    subject: 'VERBAL_LOGIC',
+    questionType: 'READING',
+    questionSubType: null,
+    difficulty: 'MEDIUM',
+    topicCategory: 'LAW',
+    topicKeyword: '',
+    topicDescription: '',
+    targetQuestionCount: 5,
+  });
 
   const apiConfigured = hasApiBaseUrl();
 
@@ -99,56 +153,73 @@ export default function ExamPage() {
     router.push(`/exam/${exam.examId}/session`);
   }
 
+  async function handleCreateExam(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsCreating(true);
+    setCreateError(null);
+
+    try {
+      await examService.generateBackendExam({
+        ...createForm,
+        topicKeyword: createForm.topicKeyword?.trim() || null,
+        topicDescription: createForm.topicDescription?.trim() || null,
+      });
+      setIsCreateOpen(false);
+      await loadExams();
+    } catch {
+      setCreateError('모의고사 생성에 실패했습니다.');
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white px-4 py-8 text-linear-text-primary md:px-8">
       <div className="mx-auto max-w-6xl space-y-6">
-        <header className="overflow-hidden rounded-[18px] border border-border bg-white shadow-[var(--shadow-level-2)]">
-          <div className="grid gap-6 p-6 md:grid-cols-[1fr_320px] md:p-8">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-linear-brand-indigo/20 bg-linear-brand-indigo/8 px-3 py-1 text-xs font-medium text-linear-accent-violet">
-                <BarChart2 className="h-3.5 w-3.5" />
-                5급 PSAT CBT
-              </div>
-              <div className="space-y-2">
-                <h1 className="linear-text-h2 tracking-tight text-linear-text-primary">PSAT 모의고사 목록</h1>
-                <p className="max-w-2xl text-sm leading-6 text-linear-text-tertiary">
-                  시험을 선택하면 CBT 화면으로 이동합니다.
-                </p>
-              </div>
-            </div>
+        <PageHero
+          eyebrow="5급 PSAT CBT"
+          title="PSAT 모의고사 목록"
+          description="시험을 선택하면 CBT 화면으로 이동합니다."
+          icon={BarChart2}
+          stats={[
+            { label: '전체', value: totalCount, tone: 'default' },
+            { label: '응시 가능', value: readyCount, tone: 'success' },
+            { label: '생성 중', value: generatingCount, tone: 'warning' },
+          ]}
+        />
 
-            <div className="grid grid-cols-3 gap-2 md:grid-cols-1">
-              <div className="rounded-[12px] border border-border bg-white px-4 py-3">
-                <p className="text-xs text-linear-text-tertiary">전체</p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums text-linear-text-primary">{totalCount}</p>
-              </div>
-              <div className="rounded-[12px] border border-linear-status-emerald/20 bg-linear-status-emerald/8 px-4 py-3">
-                <p className="text-xs text-linear-text-tertiary">응시 가능</p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums text-linear-status-emerald">{readyCount}</p>
-              </div>
-              <div className="rounded-[12px] border border-amber-500/20 bg-amber-500/8 px-4 py-3">
-                <p className="text-xs text-linear-text-tertiary">생성 중</p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums text-amber-600">{generatingCount}</p>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <section className="rounded-[14px] border border-border bg-white shadow-[var(--shadow-level-2)]">
+        <SurfacePanel className="overflow-hidden">
           <div className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-4">
             <div>
               <h2 className="text-sm font-semibold text-linear-text-primary">생성된 모의고사</h2>
-              <p className="mt-0.5 text-xs text-linear-text-tertiary">`GET /exams` 응답 기준</p>
             </div>
-            <button
-              type="button"
-              onClick={() => void loadExams()}
-              disabled={isLoading}
-              className="ml-auto inline-flex items-center gap-2 rounded-[8px] border border-border bg-white px-3 py-2 text-sm font-medium text-linear-text-secondary transition-colors hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
-              새로고침
-            </button>
+            <div className="ml-auto flex items-center gap-2">
+              <Link
+                href="/exam/generate"
+                className="inline-flex items-center gap-2 rounded-[8px] border border-border bg-white px-3 py-2 text-sm font-medium text-linear-text-secondary transition-colors hover:bg-black/3"
+              >
+                <Sparkles className="h-4 w-4" />
+                문제 생성
+              </Link>
+              <button
+                type="button"
+                onClick={() => setIsCreateOpen(true)}
+                disabled={!apiConfigured}
+                className="inline-flex items-center gap-2 rounded-[8px] bg-linear-brand-indigo px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-linear-brand-indigo/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Plus className="h-4 w-4" />
+                모의고사 생성
+              </button>
+              <button
+                type="button"
+                onClick={() => void loadExams()}
+                disabled={isLoading}
+                aria-label="모의고사 목록 새로고침"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-[8px] border border-border bg-white text-linear-text-secondary transition-colors hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -235,8 +306,126 @@ export default function ExamPage() {
               })}
             </div>
           )}
-        </section>
+        </SurfacePanel>
       </div>
+
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="border border-border bg-white text-linear-text-primary sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="text-linear-text-primary">모의고사 생성</DialogTitle>
+          </DialogHeader>
+
+          <form className="grid gap-4" onSubmit={handleCreateExam}>
+            <label className="grid gap-1.5 text-xs font-medium text-linear-text-secondary">
+              제목
+              <Input
+                value={createForm.title}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, title: event.target.value }))}
+                required
+                className="border-border bg-white text-linear-text-primary"
+              />
+            </label>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1.5 text-xs font-medium text-linear-text-secondary">
+                과목
+                <select
+                  value={createForm.subject}
+                  onChange={(event) => setCreateForm((prev) => ({ ...prev, subject: event.target.value as Subject }))}
+                  className={fieldClassName}
+                >
+                  {SUBJECT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-1.5 text-xs font-medium text-linear-text-secondary">
+                유형
+                <select
+                  value={createForm.questionType}
+                  onChange={(event) => setCreateForm((prev) => ({ ...prev, questionType: event.target.value as QuestionType }))}
+                  className={fieldClassName}
+                >
+                  {QUESTION_TYPE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-1.5 text-xs font-medium text-linear-text-secondary">
+                난이도
+                <select
+                  value={createForm.difficulty}
+                  onChange={(event) => setCreateForm((prev) => ({ ...prev, difficulty: event.target.value as DifficultyLevel }))}
+                  className={fieldClassName}
+                >
+                  {DIFFICULTY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-1.5 text-xs font-medium text-linear-text-secondary">
+                주제
+                <select
+                  value={createForm.topicCategory}
+                  onChange={(event) => setCreateForm((prev) => ({ ...prev, topicCategory: event.target.value as TopicCategory }))}
+                  className={fieldClassName}
+                >
+                  {TOPIC_CATEGORY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <label className="grid gap-1.5 text-xs font-medium text-linear-text-secondary">
+              문항 수
+              <Input
+                type="number"
+                min={1}
+                max={20}
+                value={createForm.targetQuestionCount}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, targetQuestionCount: Number(event.target.value) }))}
+                className="border-border bg-white text-linear-text-primary"
+              />
+            </label>
+
+            <label className="grid gap-1.5 text-xs font-medium text-linear-text-secondary">
+              키워드
+              <Input
+                value={createForm.topicKeyword ?? ''}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, topicKeyword: event.target.value }))}
+                className="border-border bg-white text-linear-text-primary"
+              />
+            </label>
+
+            {createError && (
+              <div className="rounded-[8px] border border-red-500/20 bg-red-500/8 px-3 py-2 text-sm text-red-500">
+                {createError}
+              </div>
+            )}
+
+            <DialogFooter className="border-border bg-white">
+              <button
+                type="button"
+                onClick={() => setIsCreateOpen(false)}
+                className="rounded-[8px] border border-border bg-white px-4 py-2 text-sm text-linear-text-secondary transition-colors hover:bg-black/3"
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                disabled={isCreating}
+                className="rounded-[8px] bg-linear-brand-indigo px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-linear-brand-indigo/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isCreating ? '생성 중' : '생성'}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -188,7 +188,6 @@ export interface GenerateExamReqDto {
   topicKeyword?: string | null;
   topicDescription?: string | null;
   targetQuestionCount: number;
-  frameSearchTopK?: number;
 }
 
 export interface GenerateExamResDto {
@@ -322,6 +321,75 @@ export interface GetTokenUsageStatisticsResult {
 
 export interface IngestFrameReqDto {
   frames: unknown[];
+}
+
+export interface StartExamAttemptReqDto {
+  examId: number;
+}
+
+export interface StartExamAttemptResDto {
+  attemptId: number;
+  examId: number;
+  status: string;
+  startedAt: string;
+}
+
+export interface SaveExamAttemptAnswerReqDto {
+  questionItemId: number;
+  selectedNumber: number | null;
+  timeSpentSeconds: number;
+  markedUnknown: boolean;
+  bookmarked: boolean;
+}
+
+export interface SaveExamAttemptAnswersReqDto {
+  answers: SaveExamAttemptAnswerReqDto[];
+}
+
+export interface SaveExamAttemptAnswersResDto {
+  attemptId: number;
+  savedCount: number;
+  updatedAt: string;
+}
+
+export interface SubmitExamAttemptAnswerReqDto {
+  questionItemId: number;
+  selectedNumber: number | null;
+  timeSpentSeconds: number;
+  markedUnknown: boolean;
+  bookmarked: boolean;
+}
+
+export interface SubmitExamAttemptReqDto {
+  answers: SubmitExamAttemptAnswerReqDto[];
+}
+
+export interface SubmitExamAttemptResDto {
+  attemptId: number;
+  examId: number;
+  status: string;
+  submittedAt: string;
+}
+
+export interface ExamAttemptResultItemResDto {
+  questionItemId: number;
+  selectedNumber: number | null;
+  correctNumber: number;
+  correct: boolean;
+  timeSpentSeconds: number;
+}
+
+export interface GetExamAttemptResultResDto {
+  attemptId: number;
+  examId: number;
+  status: string;
+  totalCount: number;
+  correctCount: number;
+  score: number;
+  accuracy: number;
+  timeSpentSeconds: number;
+  submittedAt: string;
+  items: ExamAttemptResultItemResDto[];
 }
 
 export const SUBJECT_LABEL: Record<Subject, string> = {

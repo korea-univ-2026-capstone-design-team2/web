@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import {
   CheckCircle2,
   XCircle,
@@ -28,9 +28,11 @@ import {
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
 import AnswerOption from '@/components/exam/AnswerOption';
+import { hasApiBaseUrl } from '@/lib/api/client';
+import { examAttemptService } from '@/lib/services/examAttemptService';
 import { questionService } from '@/lib/services/questionService';
 import { examService } from '@/lib/services/examService';
-import type { QuestionReview } from '@/types/question-dto';
+import type { GetExamAttemptResultResDto, QuestionReview } from '@/types/question-dto';
 import { SUBJECT_LABEL } from '@/types/question-dto';
 
 const DEFAULT_QUESTION_IDS = Array.from({ length: 20 }, (_, i) => i + 1);
@@ -41,6 +43,29 @@ interface CustomTooltipProps {
   active?: boolean;
   payload?: Array<{ value: number }>;
   label?: string;
+}
+
+function toDisplayScore(value: number): number {
+  if (value <= 1) return Math.round(value * 100);
+  return Math.round(value);
+}
+
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}분 ${s}초`;
+}
+
+function formatSubmittedAt(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
 }
 
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
@@ -55,44 +80,74 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 
 export default function ResultPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const examId = params.examId as string;
+  const attemptIdParam = searchParams.get('attemptId');
+  const attemptId = attemptIdParam && /^\d+$/.test(attemptIdParam) ? Number(attemptIdParam) : null;
+  const useBackendResult = hasApiBaseUrl() && attemptId !== null;
+
   const [reviews, setReviews] = useState<QuestionReview[]>([]);
+  const [attemptResult, setAttemptResult] = useState<GetExamAttemptResultResDto | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    void examService.getExamQuestionIds(examId)
-      .then((questionIds) => questionService.getQuestionReviewsByIds(questionIds.length ? questionIds : DEFAULT_QUESTION_IDS))
-      .then((response) => {
+
+    async function loadResult() {
+      setLoadError(null);
+
+      try {
+        const questionIds = await examService.getExamQuestionIds(examId);
+        const reviewResponse = await questionService.getQuestionReviewsByIds(
+          questionIds.length ? questionIds : DEFAULT_QUESTION_IDS,
+        );
         if (!mounted) return;
-        setReviews(response);
-      });
+        setReviews(reviewResponse);
+
+        if (useBackendResult && attemptId !== null) {
+          const result = await examAttemptService.getResult(attemptId);
+          if (!mounted) return;
+          setAttemptResult(result);
+        }
+      } catch {
+        if (!mounted) return;
+        setLoadError('시험 결과를 불러오지 못했습니다.');
+      }
+    }
+
+    void loadResult();
+
     return () => {
       mounted = false;
     };
-  }, [examId]);
+  }, [attemptId, examId, useBackendResult]);
 
-  const userAnswers = useMemo(() => {
-    const result: Record<number, number> = {};
-    for (const review of reviews) {
-      if (review.correctNumber === null) continue;
-      result[review.questionId] = review.questionId % 4 === 0
-        ? ((review.correctNumber % 5) + 1)
-        : review.correctNumber;
-    }
-    return result;
-  }, [reviews]);
+  const resultItemsByQuestionId = useMemo(() => {
+    if (!attemptResult) return new Map<number, GetExamAttemptResultResDto['items'][number]>();
+    return new Map(attemptResult.items.map((item) => [item.questionItemId, item]));
+  }, [attemptResult]);
 
   const results = useMemo(() => {
-    return reviews.map((review) => {
-      const myAnswer = userAnswers[review.questionId];
-      const isCorrect = review.correctNumber !== null && myAnswer === review.correctNumber;
-      return { review, myAnswer, isCorrect };
+    return reviews.map((review, index) => {
+      const item = resultItemsByQuestionId.get(review.questionId);
+      const myAnswer = item?.selectedNumber ?? null;
+      const isCorrect = item?.correct ?? (review.correctNumber !== null && myAnswer === review.correctNumber);
+      return {
+        review,
+        displayNumber: index + 1,
+        myAnswer,
+        isCorrect,
+        correctNumber: item?.correctNumber ?? review.correctNumber,
+      };
     });
-  }, [reviews, userAnswers]);
+  }, [resultItemsByQuestionId, reviews]);
 
-  const correctCount = useMemo(() => results.filter((r) => r.isCorrect).length, [results]);
-  const totalCount = results.length;
-  const score = totalCount ? Math.round((correctCount / totalCount) * 100) : 0;
+  const correctCount = attemptResult?.correctCount ?? results.filter((r) => r.isCorrect).length;
+  const totalCount = attemptResult?.totalCount ?? results.length;
+  const score = attemptResult ? toDisplayScore(attemptResult.score) : (totalCount ? Math.round((correctCount / totalCount) * 100) : 0);
+  const accuracyPercent = attemptResult
+    ? toDisplayScore(attemptResult.accuracy)
+    : (totalCount ? Number(((correctCount / totalCount) * 100).toFixed(1)) : 0);
   const wrongResults = useMemo(() => results.filter((r) => !r.isCorrect), [results]);
 
   const subjectData = useMemo(() => {
@@ -113,11 +168,15 @@ export default function ResultPage() {
     }));
   }, [results]);
 
-  const formattedDuration = useMemo(() => {
-    const m = Math.floor(EXAM_DURATION_SECONDS / 60);
-    const s = EXAM_DURATION_SECONDS % 60;
-    return `${m}분 ${s}초`;
-  }, []);
+  const formattedDuration = useMemo(
+    () => formatDuration(attemptResult?.timeSpentSeconds ?? EXAM_DURATION_SECONDS),
+    [attemptResult],
+  );
+
+  const formattedSubmittedAt = useMemo(
+    () => (attemptResult?.submittedAt ? formatSubmittedAt(attemptResult.submittedAt) : EXAM_DATE),
+    [attemptResult],
+  );
 
   const scoreColor =
     score >= 80 ? 'text-linear-status-emerald' : score >= 60 ? 'text-amber-500' : 'text-red-500';
@@ -125,6 +184,12 @@ export default function ResultPage() {
   return (
     <div className="min-h-screen bg-linear-bg-marketing px-4 py-8 text-linear-text-primary md:px-8">
       <div className="mx-auto max-w-6xl space-y-6">
+        {loadError && (
+          <div className="rounded-[10px] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500">
+            {loadError}
+          </div>
+        )}
+
         <div className="rounded-[10px] border border-border bg-linear-bg-panel p-6 text-center shadow-[var(--shadow-level-2)]">
           <p className="mb-4 text-2xl">시험 결과</p>
           <div className={cn('mb-1 text-7xl font-bold tabular-nums tracking-tight', scoreColor)}>
@@ -132,7 +197,7 @@ export default function ResultPage() {
             <span className="text-4xl">점</span>
           </div>
           <p className="mb-6 text-sm text-linear-text-tertiary">
-            {correctCount} / {totalCount}문항 정답 ({totalCount ? ((correctCount / totalCount) * 100).toFixed(1) : 0}%)
+            {correctCount} / {totalCount}문항 정답 ({accuracyPercent}%)
           </p>
 
           <div className="mx-auto flex w-full max-w-xs justify-center gap-6 text-sm">
@@ -143,7 +208,7 @@ export default function ResultPage() {
             <div className="h-4 w-px bg-border" />
             <div className="flex items-center gap-1.5 text-linear-text-tertiary">
               <Calendar className="h-4 w-4" />
-              <span>{EXAM_DATE}</span>
+              <span>{formattedSubmittedAt}</span>
             </div>
           </div>
         </div>
@@ -187,7 +252,7 @@ export default function ResultPage() {
                 </tr>
               </thead>
               <tbody>
-                {results.map(({ review, myAnswer, isCorrect }) => (
+                {results.map(({ review, displayNumber, myAnswer, isCorrect, correctNumber }) => (
                   <tr
                     key={review.questionId}
                     className={cn(
@@ -197,13 +262,13 @@ export default function ResultPage() {
                         : 'bg-red-500/5 hover:bg-red-500/10'
                     )}
                   >
-                    <td className="px-5 py-2.5 font-medium text-linear-text-secondary">{review.questionId}</td>
+                    <td className="px-5 py-2.5 font-medium text-linear-text-secondary">{displayNumber}</td>
                     <td className="px-3 py-2.5">
                       <span className={cn('font-medium', isCorrect ? 'text-linear-status-emerald' : 'text-red-500')}>
                         {myAnswer ?? '-'}번
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 font-medium text-linear-status-emerald">{review.correctNumber ?? '-'}번</td>
+                    <td className="px-3 py-2.5 font-medium text-linear-status-emerald">{correctNumber ?? '-'}번</td>
                     <td className="px-3 py-2.5">
                       {isCorrect ? (
                         <span className="flex items-center gap-1 text-linear-status-emerald">
@@ -233,13 +298,13 @@ export default function ResultPage() {
               </h2>
             </div>
             <Accordion className="divide-y divide-border/70">
-              {wrongResults.map(({ review, myAnswer }) => (
+              {wrongResults.map(({ review, displayNumber, myAnswer }) => (
                 <AccordionItem key={review.questionId} value={String(review.questionId)}>
                   <div className="px-5">
                     <AccordionTrigger className="py-3 text-sm text-linear-text-secondary hover:no-underline hover:text-linear-text-primary">
                       <div className="flex items-center gap-2 text-left">
                         <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-[10px] font-semibold text-red-500">
-                          {review.questionId}
+                          {displayNumber}
                         </span>
                         <span className="line-clamp-1">{review.stem}</span>
                       </div>

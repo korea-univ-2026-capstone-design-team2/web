@@ -73,8 +73,11 @@
 - [[lint/2026-06-02T07-35-51]] - lint run
 - [[lint/2026-06-02T07-36-21]] - lint run
 - [[lint/2026-06-02T07-36-43]] - lint run
+- [[lint/2026-06-03T07-03-46]] - lint run
+- [[lint/2026-06-03T07-03-56]] - lint run
 
 ## Sessions
+- [[sessions/2026-06-03-exam-and-question-generation-ui]] - Exam and question generation UI
 - [[sessions/2026-06-02-question-batch-post-integration]] - Question batch POST integration
 - [[sessions/2026-06-02-single-light-theme]] - Single light theme
 - [[sessions/2026-06-02-surface-header-polish-followup]] - Surface/header polish 후속 수정

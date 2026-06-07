@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Clock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import QuestionCard, { type Question as ExamQuestion } from '@/components/exam/QuestionCard';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { hasApiBaseUrl } from '@/lib/api/client';
+import { examAttemptService } from '@/lib/services/examAttemptService';
 import { questionService } from '@/lib/services/questionService';
 import { examService } from '@/lib/services/examService';
-import type { QuestionPaper } from '@/types/question-dto';
+import type { QuestionPaper, SubmitExamAttemptAnswerReqDto } from '@/types/question-dto';
 import { DIFFICULTY_LABEL, QUESTION_TYPE_LABEL, SUBJECT_LABEL } from '@/types/question-dto';
 
 const TIME_LIMIT_SECONDS = 45 * 60;
@@ -22,10 +24,14 @@ function formatTime(seconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function toCardQuestion(paper: QuestionPaper): ExamQuestion {
+function isBackendExamId(examId: string): boolean {
+  return /^\d+$/.test(examId);
+}
+
+function toCardQuestion(paper: QuestionPaper, displayNumber: number): ExamQuestion {
   return {
     questionId: paper.questionId,
-    number: paper.questionId,
+    number: displayNumber,
     content: paper.stem,
     passage: paper.passageContent ?? undefined,
     options: paper.choices.map((choice) => choice.text),
@@ -41,38 +47,183 @@ export default function ExamSessionPage() {
   const router = useRouter();
   const params = useParams();
   const examId = params.examId as string;
+  const apiConfigured = hasApiBaseUrl();
+  const useBackendAttempt = apiConfigured && isBackendExamId(examId);
 
   const [papers, setPapers] = useState<QuestionPaper[]>([]);
+  const [attemptId, setAttemptId] = useState<number | null>(null);
   const [currentQuestionId, setCurrentQuestionId] = useState<number>(1);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT_SECONDS);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isOmrPanelOpen, setIsOmrPanelOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const timeSpentRef = useRef<Record<number, number>>({});
+  const activeQuestionIdRef = useRef<number | null>(null);
+  const activeSinceRef = useRef<number>(0);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const attemptIdRef = useRef<number | null>(null);
+  const hasAutoSubmittedRef = useRef(false);
+  const submitExamRef = useRef<() => Promise<void>>(async () => {});
+
+  const accumulateTimeForQuestion = useCallback((questionId: number) => {
+    const elapsed = Math.max(0, Math.floor((Date.now() - activeSinceRef.current) / 1000));
+    if (elapsed > 0) {
+      timeSpentRef.current[questionId] = (timeSpentRef.current[questionId] ?? 0) + elapsed;
+    }
+    activeSinceRef.current = Date.now();
+  }, []);
+
+  const buildAnswerPayload = useCallback(
+    (questionId: number, selectedNumber: number | null): SubmitExamAttemptAnswerReqDto => ({
+      questionItemId: questionId,
+      selectedNumber,
+      timeSpentSeconds: timeSpentRef.current[questionId] ?? 0,
+      markedUnknown: false,
+      bookmarked: false,
+    }),
+    [],
+  );
+
+  const buildAllAnswers = useCallback((): SubmitExamAttemptAnswerReqDto[] => {
+    return papers.map((paper) =>
+      buildAnswerPayload(paper.questionId, answers[paper.questionId] ?? null),
+    );
+  }, [answers, buildAnswerPayload, papers]);
+
+  const saveAnswerToBackend = useCallback(
+    async (questionId: number, selectedNumber: number) => {
+      const currentAttemptId = attemptIdRef.current;
+      if (!useBackendAttempt || currentAttemptId === null) return;
+
+      try {
+        await examAttemptService.saveAnswers(currentAttemptId, {
+          answers: [buildAnswerPayload(questionId, selectedNumber)],
+        });
+      } catch {
+        setSessionError('답안 저장에 실패했습니다.');
+      }
+    },
+    [buildAnswerPayload, useBackendAttempt],
+  );
+
+  const submitExam = useCallback(async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    if (currentQuestionId) {
+      accumulateTimeForQuestion(currentQuestionId);
+    }
+
+    if (useBackendAttempt && attemptIdRef.current !== null) {
+      try {
+        await examAttemptService.submit(attemptIdRef.current, { answers: buildAllAnswers() });
+        router.push(`/exam/${examId}/result?attemptId=${attemptIdRef.current}`);
+        return;
+      } catch {
+        setSubmitError('시험 제출에 실패했습니다.');
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    router.push(`/exam/${examId}/result`);
+    setIsSubmitting(false);
+  }, [
+    accumulateTimeForQuestion,
+    buildAllAnswers,
+    currentQuestionId,
+    examId,
+    isSubmitting,
+    router,
+    useBackendAttempt,
+  ]);
+
+  useEffect(() => {
+    activeSinceRef.current = Date.now();
+  }, []);
+
+  useEffect(() => {
+    attemptIdRef.current = attemptId;
+  }, [attemptId]);
 
   useEffect(() => {
     let mounted = true;
-    void examService.getExamQuestionIds(examId)
-      .then((questionIds) => questionService.getQuestionPapersByIds(questionIds.length ? questionIds : DEFAULT_QUESTION_IDS))
-      .then((response) => {
+
+    async function loadSession() {
+      setSessionError(null);
+
+      try {
+        const questionIds = await examService.getExamQuestionIds(examId);
+        const response = await questionService.getQuestionPapersByIds(
+          questionIds.length ? questionIds : DEFAULT_QUESTION_IDS,
+        );
         if (!mounted) return;
+
         setPapers(response);
         if (response.length) {
           setCurrentQuestionId(response[0].questionId);
+          activeQuestionIdRef.current = response[0].questionId;
+          activeSinceRef.current = Date.now();
         }
-      });
+
+        if (useBackendAttempt) {
+          const attempt = await examAttemptService.startAttempt({ examId: Number(examId) });
+          if (!mounted) return;
+          setAttemptId(attempt.attemptId);
+        }
+      } catch {
+        if (!mounted) return;
+        setSessionError('시험을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
+      }
+    }
+
+    void loadSession();
+
     return () => {
       mounted = false;
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [examId]);
+  }, [examId, useBackendAttempt]);
 
   useEffect(() => {
-    if (timeLeft <= 0) {
-      router.push(`/exam/${examId}/result`);
-      return;
+    if (activeQuestionIdRef.current === currentQuestionId) return;
+    if (activeQuestionIdRef.current !== null) {
+      accumulateTimeForQuestion(activeQuestionIdRef.current);
     }
-    const id = setInterval(() => setTimeLeft((t) => t - 1), 1000);
+    activeQuestionIdRef.current = currentQuestionId;
+    activeSinceRef.current = Date.now();
+  }, [accumulateTimeForQuestion, currentQuestionId]);
+
+  useEffect(() => {
+    submitExamRef.current = submitExam;
+  }, [submitExam]);
+
+  useEffect(() => {
+    if (timeLeft <= 0) return undefined;
+
+    const id = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          queueMicrotask(() => {
+            if (!hasAutoSubmittedRef.current) {
+              hasAutoSubmittedRef.current = true;
+              void submitExamRef.current();
+            }
+          });
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
     return () => clearInterval(id);
-  }, [timeLeft, router, examId]);
+  }, [timeLeft]);
 
   const total = papers.length;
   const orderedQuestionIds = useMemo(() => papers.map((paper) => paper.questionId), [papers]);
@@ -90,8 +241,14 @@ export default function ExamSessionPage() {
   const isLowTime = timeLeft < 5 * 60;
 
   function handleAnswer(questionId: number, optionNumber: number) {
+    accumulateTimeForQuestion(questionId);
     setAnswers((prev) => ({ ...prev, [questionId]: optionNumber }));
     setCurrentQuestionId(questionId);
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      void saveAnswerToBackend(questionId, optionNumber);
+    }, 500);
   }
 
   function movePage(direction: 'prev' | 'next') {
@@ -104,7 +261,7 @@ export default function ExamSessionPage() {
   }
 
   function handleSubmitConfirm() {
-    router.push(`/exam/${examId}/result`);
+    void submitExam();
   }
 
   function renderOmrPanel() {
@@ -150,9 +307,10 @@ export default function ExamSessionPage() {
 
         <div className="flex-1 overflow-y-auto px-3 py-3">
           <div className="space-y-1.5">
-            {papers.map((paper) => {
+            {papers.map((paper, index) => {
               const selected = answers[paper.questionId];
               const isCurrent = paper.questionId === currentQuestionId;
+              const displayNumber = index + 1;
               return (
                 <div
                   key={paper.questionId}
@@ -175,7 +333,7 @@ export default function ExamSessionPage() {
                           : 'border border-border text-linear-text-tertiary'
                     )}
                   >
-                    {paper.questionId}
+                    {displayNumber}
                   </button>
 
                   <div className="flex items-center gap-1">
@@ -220,6 +378,12 @@ export default function ExamSessionPage() {
   return (
     <div className="min-h-screen bg-white px-4 py-8 text-linear-text-primary md:px-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-4">
+        {sessionError && (
+          <div className="rounded-[10px] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500">
+            {sessionError}
+          </div>
+        )}
+
         <header className="rounded-[12px] border border-border bg-white px-4 py-3 shadow-[var(--shadow-level-1)]">
           <div className="flex flex-wrap items-center gap-3">
             <div>
@@ -275,6 +439,7 @@ export default function ExamSessionPage() {
             <div className="max-h-[calc(100vh-210px)] space-y-4 overflow-y-auto px-5 py-5">
               {visiblePapers.map((paper) => {
                 const isCurrent = paper.questionId === currentQuestionId;
+                const displayNumber = papers.findIndex((item) => item.questionId === paper.questionId) + 1;
                 return (
                   <section
                     key={paper.questionId}
@@ -286,7 +451,7 @@ export default function ExamSessionPage() {
                     )}
                   >
                     <QuestionCard
-                      question={toCardQuestion(paper)}
+                      question={toCardQuestion(paper, displayNumber)}
                       selectedAnswer={answers[paper.questionId]}
                       onAnswer={(optionNumber) => handleAnswer(paper.questionId, optionNumber)}
                     />
@@ -353,22 +518,30 @@ export default function ExamSessionPage() {
                 <p className="mt-1 text-2xl font-bold text-red-500">{unansweredCount}</p>
               </div>
             </div>
+
+            {submitError && (
+              <div className="rounded-[8px] border border-red-500/20 bg-red-500/8 px-3 py-2 text-sm text-red-500">
+                {submitError}
+              </div>
+            )}
           </div>
 
           <DialogFooter className="flex-row gap-2">
             <button
               type="button"
               onClick={() => setIsSubmitModalOpen(false)}
-              className="flex-1 rounded-[8px] border border-border bg-white py-2.5 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 dark:hover:bg-white/6"
+              disabled={isSubmitting}
+              className="flex-1 rounded-[8px] border border-border bg-white py-2.5 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-white/6"
             >
               계속 풀기
             </button>
             <button
               type="button"
               onClick={handleSubmitConfirm}
-              className="flex-1 rounded-[8px] bg-linear-brand-indigo py-2.5 text-sm font-semibold text-white transition-colors hover:bg-linear-brand-indigo/90"
+              disabled={isSubmitting}
+              className="flex-1 rounded-[8px] bg-linear-brand-indigo py-2.5 text-sm font-semibold text-white transition-colors hover:bg-linear-brand-indigo/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              최종 제출
+              {isSubmitting ? '제출 중' : '최종 제출'}
             </button>
           </DialogFooter>
         </DialogContent>
