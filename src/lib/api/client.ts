@@ -59,12 +59,20 @@ function unwrapDataEnvelope<T>(body: unknown): T {
   return body as T;
 }
 
+import { tokenStorage } from '@/lib/auth/tokenStorage';
+
+function getAuthHeaders(): HeadersInit {
+  const accessToken = tokenStorage.getAccessToken();
+  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+}
+
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
   const { method = options.body === undefined ? 'GET' : 'POST', query, body, headers } = options;
   const response = await fetch(buildUrl(path, query), {
     method,
     headers: {
       Accept: 'application/json',
+      ...getAuthHeaders(),
       ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
       ...headers,
     },

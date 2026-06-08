@@ -7,6 +7,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
+import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
+import { useAuthStore } from "@/lib/store/authStore";
 
 const loginSchema = z.object({
   email: z.string().email("올바른 이메일 주소를 입력해주세요"),
@@ -22,6 +24,10 @@ export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
+  const loginWithOAuth = useAuthStore((state) => state.loginWithOAuth);
+  const authError = useAuthStore((state) => state.error);
+  const clearError = useAuthStore((state) => state.clearError);
 
   const {
     register,
@@ -37,6 +43,17 @@ export default function LoginPage() {
     setIsLoading(false);
     router.push("/dashboard");
   };
+
+  async function handleGoogleLogin(idToken: string) {
+    setOauthError(null);
+    clearError();
+    const success = await loginWithOAuth("GOOGLE", idToken);
+    if (success) {
+      router.push("/dashboard");
+      return;
+    }
+    setOauthError(useAuthStore.getState().error ?? "Google 로그인에 실패했습니다.");
+  }
 
   return (
     <div className="space-y-7">
@@ -109,29 +126,14 @@ export default function LoginPage() {
         </div>
 
         <div className="space-y-2.5">
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2.5 rounded-[8px] border border-border bg-white px-4 py-3 text-sm font-medium text-[#1F2937] transition-colors hover:bg-gray-50"
-          >
-            <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
-              <path fill="#FFC107" d="M43.61 20.08H42V20H24v8h11.3C33.65 32.66 29.22 36 24 36c-6.63 0-12-5.37-12-12s5.37-12 12-12c3.06 0 5.85 1.15 7.96 3.04l5.66-5.66C34.56 6.53 29.59 4 24 4 12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20c0-1.34-.14-2.65-.39-3.92z" />
-              <path fill="#FF3D00" d="M6.31 14.69l6.57 4.82C14.66 16.11 18.99 12 24 12c3.06 0 5.85 1.15 7.96 3.04l5.66-5.66C34.56 6.53 29.59 4 24 4c-7.68 0-14.32 4.34-17.69 10.69z" />
-              <path fill="#4CAF50" d="M24 44c5.48 0 10.37-2.1 14.08-5.53l-6.5-5.5C29.54 34.32 26.88 35.2 24 35.2c-5.2 0-9.62-3.32-11.24-7.92l-6.52 5.02C9.57 39.57 16.23 44 24 44z" />
-              <path fill="#1976D2" d="M43.61 20.08H42V20H24v8h11.3c-.78 2.38-2.3 4.33-4.42 5.67l6.5 5.5C41.16 35.68 44 30.36 44 24c0-1.34-.14-2.65-.39-3.92z" />
-            </svg>
-            Google로 로그인
-          </button>
-
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2.5 rounded-[8px] px-4 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
-            style={{ backgroundColor: "#03C75A" }}
-          >
-            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
-              <path d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727z" />
-            </svg>
-            네이버 로그인
-          </button>
+          <GoogleLoginButton
+            disabled={isLoading}
+            onCredential={handleGoogleLogin}
+            onError={(message) => setOauthError(message)}
+          />
+          {(oauthError || authError) && (
+            <p className="text-xs text-red-500">{oauthError ?? authError}</p>
+          )}
         </div>
       </div>
 

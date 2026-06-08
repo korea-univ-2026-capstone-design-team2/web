@@ -2,8 +2,8 @@
 
 import { create } from 'zustand';
 import type { ExamCategory, User } from '@/types';
-import { mockUser } from '@/data/mock/user';
 import { authService } from '@/lib/services/authService';
+import type { OAuthProvider } from '@/types/auth-dto';
 
 interface AuthStore {
   user: User | null;
@@ -12,6 +12,7 @@ interface AuthStore {
   error: string | null;
 
   login: (email: string, password: string) => Promise<boolean>;
+  loginWithOAuth: (provider: OAuthProvider, idToken: string) => Promise<boolean>;
   signup: (data: {
     name: string;
     email: string;
@@ -25,9 +26,8 @@ interface AuthStore {
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
-  // Initialize with mock user for demo purposes
-  user: mockUser,
-  isAuthenticated: true,
+  user: null,
+  isAuthenticated: false,
   isLoading: false,
   error: null,
 
@@ -40,6 +40,21 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       return true;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '로그인에 실패했습니다.';
+      set({ error: message, isLoading: false });
+      return false;
+    }
+  },
+
+  loginWithOAuth: async (provider: OAuthProvider, idToken: string): Promise<boolean> => {
+    set({ isLoading: true, error: null });
+
+    try {
+      await authService.oauthLogin({ provider, idToken });
+      const user = await authService.getCurrentUser();
+      set({ user, isAuthenticated: true, isLoading: false });
+      return true;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '소셜 로그인에 실패했습니다.';
       set({ error: message, isLoading: false });
       return false;
     }

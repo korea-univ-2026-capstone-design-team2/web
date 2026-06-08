@@ -1,5 +1,8 @@
 import type { ExamCategory, User } from '@/types';
+import type { AuthMeResDto, OAuthLoginReqDto, OAuthLoginResDto } from '@/types/auth-dto';
 import { mockUser } from '@/data/mock/user';
+import { apiRequest, hasApiBaseUrl } from '@/lib/api/client';
+import { tokenStorage } from '@/lib/auth/tokenStorage';
 
 interface LoginCredentials {
   email: string;
@@ -19,7 +22,29 @@ interface AuthResponse {
   token: string;
 }
 
+function mapAuthMeToUser(dto: AuthMeResDto): User {
+  return {
+    id: dto.userId,
+    name: dto.name,
+    email: dto.email,
+    targetExam: dto.targetExam as ExamCategory,
+    targetScore: dto.targetScore,
+    avatarUrl: dto.avatarUrl ?? undefined,
+    createdAt: new Date(dto.createdAt),
+  };
+}
+
 export const authService = {
+  oauthLogin: async (payload: OAuthLoginReqDto): Promise<OAuthLoginResDto> => {
+    const tokens = await apiRequest<OAuthLoginResDto>('/auth/oauth/login', {
+      method: 'POST',
+      body: payload,
+    });
+
+    tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
+    return tokens;
+  },
+
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     void credentials;
 
@@ -58,11 +83,20 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
+    tokenStorage.clearTokens();
     await new Promise((resolve) => setTimeout(resolve, 200));
-    return Promise.resolve();
   },
 
   getCurrentUser: async (): Promise<User | null> => {
+    if (hasApiBaseUrl() && tokenStorage.hasAccessToken()) {
+      try {
+        const me = await apiRequest<AuthMeResDto>('/auth/me');
+        return mapAuthMeToUser(me);
+      } catch {
+        // fall back to mock user for local development
+      }
+    }
+
     return Promise.resolve(mockUser);
   },
 
