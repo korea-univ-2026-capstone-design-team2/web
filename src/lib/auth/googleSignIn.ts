@@ -5,6 +5,8 @@ interface GoogleCredentialResponse {
 }
 
 let scriptPromise: Promise<void> | null = null;
+let initializedClientId: string | null = null;
+let credentialHandler: ((idToken: string) => void) | null = null;
 
 function loadGoogleScript(): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve();
@@ -35,55 +37,45 @@ function loadGoogleScript(): Promise<void> {
   return scriptPromise;
 }
 
-export function mountGoogleSignInButton(
-  container: HTMLElement,
-  clientId: string,
-  onCredential: (idToken: string) => void,
-  onError?: (error: Error) => void,
-): () => void {
-  let cancelled = false;
-
-  void loadGoogleScript()
-    .then(() => {
-      if (cancelled || !window.google?.accounts?.id) return;
-
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: (response: GoogleCredentialResponse) => {
-          if (response.credential) {
-            onCredential(response.credential);
-            return;
-          }
-          onError?.(new Error('Google ID 토큰을 받지 못했습니다.'));
-        },
-      });
-
-      container.innerHTML = '';
-      window.google.accounts.id.renderButton(container, {
-        type: 'standard',
-        theme: 'outline',
-        size: 'large',
-        text: 'signin_with',
-        width: container.offsetWidth || 320,
-        locale: 'ko',
-      });
-    })
-    .catch((error: unknown) => {
-      onError?.(error instanceof Error ? error : new Error('Google 로그인 초기화에 실패했습니다.'));
-    });
-
-  return () => {
-    cancelled = true;
-    container.innerHTML = '';
-  };
+export function setGoogleCredentialHandler(handler: ((idToken: string) => void) | null): void {
+  credentialHandler = handler;
 }
 
-export function clickGoogleSignInButton(container: HTMLElement | null): boolean {
-  if (!container) return false;
-  const button = container.querySelector('[role="button"]') as HTMLElement | null;
-  if (!button) return false;
-  button.click();
-  return true;
+export async function ensureGoogleSignIn(clientId: string): Promise<void> {
+  const normalizedClientId = clientId.trim();
+  await loadGoogleScript();
+
+  if (!window.google?.accounts?.id) {
+    throw new Error('Google 로그인을 초기화하지 못했습니다.');
+  }
+
+  if (initializedClientId === normalizedClientId) return;
+
+  window.google.accounts.id.initialize({
+    client_id: normalizedClientId,
+    callback: (response: GoogleCredentialResponse) => {
+      if (response.credential) {
+        credentialHandler?.(response.credential);
+        return;
+      }
+    },
+  });
+
+  initializedClientId = normalizedClientId;
+}
+
+export function renderGoogleSignInButton(container: HTMLElement, width: number): void {
+  if (!window.google?.accounts?.id) return;
+
+  container.innerHTML = '';
+  window.google.accounts.id.renderButton(container, {
+    type: 'standard',
+    theme: 'outline',
+    size: 'large',
+    text: 'signin_with',
+    width: Math.max(width, 240),
+    locale: 'ko',
+  });
 }
 
 declare global {

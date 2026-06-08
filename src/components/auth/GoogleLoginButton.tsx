@@ -1,8 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { clickGoogleSignInButton, mountGoogleSignInButton } from '@/lib/auth/googleSignIn';
+import { cn } from '@/lib/utils';
+import {
+  ensureGoogleSignIn,
+  renderGoogleSignInButton,
+  setGoogleCredentialHandler,
+} from '@/lib/auth/googleSignIn';
 
 interface GoogleLoginButtonProps {
   disabled?: boolean;
@@ -11,69 +16,74 @@ interface GoogleLoginButtonProps {
 }
 
 export default function GoogleLoginButton({ disabled = false, onCredential, onError }: GoogleLoginButtonProps) {
-  const hiddenButtonRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const onCredentialRef = useRef(onCredential);
+  const onErrorRef = useRef(onError);
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-  const handleCredential = useCallback(
-    async (idToken: string) => {
-      setIsLoading(true);
-      try {
-        await onCredential(idToken);
-      } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Google 로그인에 실패했습니다.';
-        onError?.(message);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [onCredential, onError],
-  );
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim();
+
+  onCredentialRef.current = onCredential;
+  onErrorRef.current = onError;
 
   useEffect(() => {
-    if (!clientId || !hiddenButtonRef.current) return;
+    if (!clientId || !overlayRef.current || !containerRef.current) return;
 
-    const cleanup = mountGoogleSignInButton(
-      hiddenButtonRef.current,
-      clientId,
-      (idToken) => {
-        void handleCredential(idToken);
-      },
-      (error) => {
-        onError?.(error.message);
-      },
+    let cancelled = false;
+
+    setGoogleCredentialHandler((idToken) => {
+      setIsLoading(true);
+      void Promise.resolve(onCredentialRef.current(idToken))
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : 'Google 로그인에 실패했습니다.';
+          onErrorRef.current?.(message);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    });
+
+    void ensureGoogleSignIn(clientId)
+      .then(() => {
+        if (cancelled || !overlayRef.current || !containerRef.current) return;
+
+        const width = containerRef.current.offsetWidth;
+        renderGoogleSignInButton(overlayRef.current, width);
+        setIsReady(true);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        const message = error instanceof Error ? error.message : 'Google 로그인 초기화에 실패했습니다.';
+        onErrorRef.current?.(message);
+      });
+
+    return () => {
+      cancelled = true;
+      setGoogleCredentialHandler(null);
+      if (overlayRef.current) overlayRef.current.innerHTML = '';
+      setIsReady(false);
+    };
+  }, [clientId]);
+
+  if (!clientId) {
+    return (
+      <button
+        type="button"
+        disabled
+        className="flex w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-[8px] border border-border bg-white px-4 py-3 text-sm font-medium text-linear-text-tertiary opacity-60"
+      >
+        Google 로그인 (Client ID 미설정)
+      </button>
     );
-
-    setIsReady(true);
-    return cleanup;
-  }, [clientId, handleCredential, onError]);
-
-  function handleClick() {
-    if (!clientId) {
-      onError?.('NEXT_PUBLIC_GOOGLE_CLIENT_ID가 설정되지 않았습니다.');
-      return;
-    }
-
-    if (!isReady) {
-      onError?.('Google 로그인을 준비 중입니다. 잠시 후 다시 시도해주세요.');
-      return;
-    }
-
-    const clicked = clickGoogleSignInButton(hiddenButtonRef.current);
-    if (!clicked) {
-      onError?.('Google 로그인 버튼을 열지 못했습니다.');
-    }
   }
 
   return (
-    <>
-      <div ref={hiddenButtonRef} className="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0" aria-hidden="true" />
-      <button
-        type="button"
-        disabled={disabled || isLoading}
-        onClick={handleClick}
-        className="flex w-full items-center justify-center gap-2.5 rounded-[8px] border border-border bg-white px-4 py-3 text-sm font-medium text-[#1F2937] transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+    <div ref={containerRef} className="relative w-full">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none flex w-full items-center justify-center gap-2.5 rounded-[8px] border border-border bg-white px-4 py-3 text-sm font-medium text-[#1F2937]"
       >
         {isLoading ? (
           <>
@@ -91,7 +101,16 @@ export default function GoogleLoginButton({ disabled = false, onCredential, onEr
             Google로 로그인
           </>
         )}
-      </button>
-    </>
+      </div>
+
+      <div
+        ref={overlayRef}
+        className={cn(
+          'absolute inset-0 z-10 overflow-hidden opacity-[0.01]',
+          (disabled || isLoading || !isReady) && 'pointer-events-none',
+        )}
+        aria-label="Google로 로그인"
+      />
+    </div>
   );
 }
