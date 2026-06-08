@@ -16,7 +16,7 @@ import { DIFFICULTY_LABEL, QUESTION_TYPE_LABEL, SUBJECT_LABEL } from '@/types/qu
 
 const TIME_LIMIT_SECONDS = 45 * 60;
 const QUESTIONS_PER_VIEW = 4;
-const DEFAULT_QUESTION_IDS = Array.from({ length: 20 }, (_, i) => i + 1);
+const DEFAULT_QUESTION_IDS = Array.from({ length: 20 }, (_, i) => String(i + 1));
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -24,8 +24,8 @@ function formatTime(seconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function isBackendExamId(examId: string): boolean {
-  return /^\d+$/.test(examId);
+function isMockExamId(examId: string): boolean {
+  return examId.startsWith('mock_');
 }
 
 function toCardQuestion(paper: QuestionPaper, displayNumber: number): ExamQuestion {
@@ -48,12 +48,12 @@ export default function ExamSessionPage() {
   const params = useParams();
   const examId = params.examId as string;
   const apiConfigured = hasApiBaseUrl();
-  const useBackendAttempt = apiConfigured && isBackendExamId(examId);
+  const useBackendAttempt = apiConfigured && !isMockExamId(examId);
 
   const [papers, setPapers] = useState<QuestionPaper[]>([]);
-  const [attemptId, setAttemptId] = useState<number | null>(null);
-  const [currentQuestionId, setCurrentQuestionId] = useState<number>(1);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [currentQuestionId, setCurrentQuestionId] = useState<string>('');
+  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT_SECONDS);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isOmrPanelOpen, setIsOmrPanelOpen] = useState(false);
@@ -61,15 +61,15 @@ export default function ExamSessionPage() {
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const timeSpentRef = useRef<Record<number, number>>({});
-  const activeQuestionIdRef = useRef<number | null>(null);
+  const timeSpentRef = useRef<Record<string, number>>({});
+  const activeQuestionIdRef = useRef<string | null>(null);
   const activeSinceRef = useRef<number>(0);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const attemptIdRef = useRef<number | null>(null);
+  const attemptIdRef = useRef<string | null>(null);
   const hasAutoSubmittedRef = useRef(false);
   const submitExamRef = useRef<() => Promise<void>>(async () => {});
 
-  const accumulateTimeForQuestion = useCallback((questionId: number) => {
+  const accumulateTimeForQuestion = useCallback((questionId: string) => {
     const elapsed = Math.max(0, Math.floor((Date.now() - activeSinceRef.current) / 1000));
     if (elapsed > 0) {
       timeSpentRef.current[questionId] = (timeSpentRef.current[questionId] ?? 0) + elapsed;
@@ -78,7 +78,7 @@ export default function ExamSessionPage() {
   }, []);
 
   const buildAnswerPayload = useCallback(
-    (questionId: number, selectedNumber: number | null): SubmitExamAttemptAnswerReqDto => ({
+    (questionId: string, selectedNumber: number | null): SubmitExamAttemptAnswerReqDto => ({
       questionItemId: questionId,
       selectedNumber,
       timeSpentSeconds: timeSpentRef.current[questionId] ?? 0,
@@ -95,7 +95,7 @@ export default function ExamSessionPage() {
   }, [answers, buildAnswerPayload, papers]);
 
   const saveAnswerToBackend = useCallback(
-    async (questionId: number, selectedNumber: number) => {
+    async (questionId: string, selectedNumber: number) => {
       const currentAttemptId = attemptIdRef.current;
       if (!useBackendAttempt || currentAttemptId === null) return;
 
@@ -173,7 +173,7 @@ export default function ExamSessionPage() {
         }
 
         if (useBackendAttempt) {
-          const attempt = await examAttemptService.startAttempt({ examId: Number(examId) });
+          const attempt = await examAttemptService.startAttempt({ examId });
           if (!mounted) return;
           setAttemptId(attempt.attemptId);
         }
@@ -240,7 +240,7 @@ export default function ExamSessionPage() {
   const progress = total > 0 ? (answeredCount / total) * 100 : 0;
   const isLowTime = timeLeft < 5 * 60;
 
-  function handleAnswer(questionId: number, optionNumber: number) {
+  function handleAnswer(questionId: string, optionNumber: number) {
     accumulateTimeForQuestion(questionId);
     setAnswers((prev) => ({ ...prev, [questionId]: optionNumber }));
     setCurrentQuestionId(questionId);

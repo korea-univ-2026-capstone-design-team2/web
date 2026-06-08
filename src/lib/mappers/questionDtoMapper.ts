@@ -39,12 +39,12 @@ function buildIncorrectReasons(question: Question): Record<string, string> {
 }
 
 function basePaper(question: Question, order?: number): QuestionPaper {
-  const questionId = order !== undefined ? order + 1 : question.questionId;
+  const questionId = order !== undefined ? String(order + 1) : String(question.questionId);
   return {
     questionId,
     questionItemId: questionId,
     groupQuestionId: questionId,
-    generationId: 0,
+    generationId: '0',
     sharedContextContent: question.passage ?? null,
     sharedContextDescription: null,
     subject: mapSubject(question.subjectId),
@@ -107,7 +107,7 @@ export function toQuestionDetailDto(question: Question, order?: number): Questio
     qualityScore: null,
     passageTopicCategory: null,
     passageTopicKeyword: null,
-    frameId: 0,
+    frameId: '0',
     similarityScore: 0,
     frameType: 'NONE',
   };

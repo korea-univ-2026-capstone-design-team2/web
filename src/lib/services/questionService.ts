@@ -23,6 +23,11 @@ import { apiRequest, hasApiBaseUrl } from '@/lib/api/client';
 
 const bookmarkedQuestionIds = new Set<number>([4, 17, 28]);
 
+function parseMockQuestionId(questionId: string): number | null {
+  const parsed = Number(questionId);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function getQuestionByNumber(questionId: number): Question | undefined {
   return mockQuestions.find((question) => question.questionId === questionId);
 }
@@ -79,28 +84,32 @@ function normalizeDetailView(view: QuestionDetailView): QuestionDetail | undefin
     qualityScore: first.qualityScore,
     passageTopicCategory: view.passageTopicCategory,
     passageTopicKeyword: view.passageTopicKeyword,
-    frameId: 0,
+    frameId: '0',
     similarityScore: 0,
     frameType: 'UNSPECIFIED',
   };
 }
 
-function getMockPapersByIds(questionIds: number[]): QuestionPaper[] {
+function getMockPapersByIds(questionIds: string[]): QuestionPaper[] {
   return questionIds
     .map((questionId) => {
-      const question = getQuestionByNumber(questionId);
+      const numericId = parseMockQuestionId(questionId);
+      if (numericId === null) return null;
+      const question = getQuestionByNumber(numericId);
       if (!question) return null;
-      return toQuestionPaperDto(question, questionId - 1);
+      return toQuestionPaperDto(question, numericId - 1);
     })
     .filter((item): item is QuestionPaper => Boolean(item));
 }
 
-function getMockReviewsByIds(questionIds: number[]): QuestionReview[] {
+function getMockReviewsByIds(questionIds: string[]): QuestionReview[] {
   return questionIds
     .map((questionId) => {
-      const question = getQuestionByNumber(questionId);
+      const numericId = parseMockQuestionId(questionId);
+      if (numericId === null) return null;
+      const question = getQuestionByNumber(numericId);
       if (!question) return null;
-      return toQuestionReviewDto(question, questionId - 1);
+      return toQuestionReviewDto(question, numericId - 1);
     })
     .filter((item): item is QuestionReview => Boolean(item));
 }
@@ -120,8 +129,10 @@ export const questionService = {
     return Promise.resolve(result);
   },
 
-  getQuestionById: async (questionId: number): Promise<Question | undefined> => {
-    const question = getQuestionByNumber(questionId);
+  getQuestionById: async (questionId: string): Promise<Question | undefined> => {
+    const numericId = parseMockQuestionId(questionId);
+    if (numericId === null) return Promise.resolve(undefined);
+    const question = getQuestionByNumber(numericId);
     return Promise.resolve(question);
   },
 
@@ -136,14 +147,17 @@ export const questionService = {
     return Promise.resolve(bookmarked);
   },
 
-  toggleBookmark: async (userId: string, questionId: number): Promise<boolean> => {
+  toggleBookmark: async (userId: string, questionId: string): Promise<boolean> => {
     void userId;
-    if (bookmarkedQuestionIds.has(questionId)) {
-      bookmarkedQuestionIds.delete(questionId);
+    const numericId = parseMockQuestionId(questionId);
+    if (numericId === null) return Promise.resolve(false);
+
+    if (bookmarkedQuestionIds.has(numericId)) {
+      bookmarkedQuestionIds.delete(numericId);
       return Promise.resolve(false);
     }
 
-    bookmarkedQuestionIds.add(questionId);
+    bookmarkedQuestionIds.add(numericId);
     return Promise.resolve(true);
   },
 
@@ -166,24 +180,24 @@ export const questionService = {
     return apiRequest<CreateQuestionResDto>('/questions', { method: 'POST', body: payload });
   },
 
-  getQuestionPaperView: async (questionId: number): Promise<QuestionPaperView> => {
+  getQuestionPaperView: async (questionId: string): Promise<QuestionPaperView> => {
     return apiRequest<QuestionPaperView>(`/questions/${questionId}/paper`);
   },
 
-  getQuestionReviewView: async (questionId: number): Promise<QuestionReviewView> => {
+  getQuestionReviewView: async (questionId: string): Promise<QuestionReviewView> => {
     return apiRequest<QuestionReviewView>(`/questions/${questionId}/review`);
   },
 
-  getQuestionDetailView: async (questionId: number): Promise<QuestionDetailView> => {
+  getQuestionDetailView: async (questionId: string): Promise<QuestionDetailView> => {
     return apiRequest<QuestionDetailView>(`/questions/${questionId}/detail`);
   },
 
-  getQuestionPaperViewsByIds: async (questionIds: number[]): Promise<QuestionPaperView[]> => {
+  getQuestionPaperViewsByIds: async (questionIds: string[]): Promise<QuestionPaperView[]> => {
     const body: GetQuestionPapersReqDto = { questionIds };
     return apiRequest<QuestionPaperView[]>('/questions/papers', { method: 'POST', body });
   },
 
-  getQuestionReviewViewsByIds: async (questionIds: number[]): Promise<QuestionReviewView[]> => {
+  getQuestionReviewViewsByIds: async (questionIds: string[]): Promise<QuestionReviewView[]> => {
     const body: GetQuestionReviewsReqDto = { questionIds };
     return apiRequest<QuestionReviewView[]>('/questions/reviews', { method: 'POST', body });
   },
@@ -192,7 +206,7 @@ export const questionService = {
     return Promise.resolve(mockQuestions.map((question, index) => toQuestionPaperDto(question, index)));
   },
 
-  getQuestionPapersByIds: async (questionIds: number[]): Promise<QuestionPaper[]> => {
+  getQuestionPapersByIds: async (questionIds: string[]): Promise<QuestionPaper[]> => {
     if (!questionIds.length) return Promise.resolve([]);
 
     if (hasApiBaseUrl()) {
@@ -211,7 +225,7 @@ export const questionService = {
     return Promise.resolve(mockQuestions.map((question, index) => toQuestionReviewDto(question, index)));
   },
 
-  getQuestionReviewsByIds: async (questionIds: number[]): Promise<QuestionReview[]> => {
+  getQuestionReviewsByIds: async (questionIds: string[]): Promise<QuestionReview[]> => {
     if (!questionIds.length) return Promise.resolve([]);
 
     if (hasApiBaseUrl()) {
@@ -226,7 +240,7 @@ export const questionService = {
     return Promise.resolve(getMockReviewsByIds(questionIds));
   },
 
-  getQuestionDetail: async (questionId: number): Promise<QuestionDetail | undefined> => {
+  getQuestionDetail: async (questionId: string): Promise<QuestionDetail | undefined> => {
     if (hasApiBaseUrl()) {
       try {
         return normalizeDetailView(await questionService.getQuestionDetailView(questionId));
@@ -235,8 +249,10 @@ export const questionService = {
       }
     }
 
-    const question = getQuestionByNumber(questionId);
+    const numericId = parseMockQuestionId(questionId);
+    if (numericId === null) return Promise.resolve(undefined);
+    const question = getQuestionByNumber(numericId);
     if (!question) return Promise.resolve(undefined);
-    return Promise.resolve(toQuestionDetailDto(question, questionId - 1));
+    return Promise.resolve(toQuestionDetailDto(question, numericId - 1));
   },
 };

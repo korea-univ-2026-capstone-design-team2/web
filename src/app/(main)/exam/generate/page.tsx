@@ -101,7 +101,7 @@ export default function QuestionGeneratePage() {
     ].slice(0, 20));
   }
 
-  function connectEvents(generationId: number) {
+  function connectEvents(generationId: string) {
     eventSourceRef.current?.close();
 
     const url = questionGenerationService.getGenerationEventsUrl(generationId);

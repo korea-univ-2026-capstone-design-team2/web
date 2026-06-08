@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   BookOpen,
@@ -12,10 +12,19 @@ import {
   ArrowRight,
   Sparkles,
   LayoutDashboard,
+  Loader2,
 } from 'lucide-react';
 import RadarChart from '@/components/analytics/RadarChart';
 import LineChart from '@/components/analytics/LineChart';
 import { PageHero, SurfacePanel } from '@/components/common/PageHero';
+import {
+  calculateStreakDays,
+  dailyRecordsToTrendLine,
+  formatStudyDuration,
+  getTodayRecord,
+  toAccuracyPercent,
+} from '@/lib/analytics/helpers';
+import { analyticsService } from '@/lib/services/analyticsService';
 
 const radarData = [
   { subject: '국어', score: 79 },
@@ -26,23 +35,6 @@ const radarData = [
   { subject: '사회', score: 62 },
 ];
 
-function generate30DaysData() {
-  const data = [];
-  const now = new Date(2026, 3, 2);
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const month = d.getMonth() + 1;
-    const day = d.getDate();
-    const base = 68;
-    const trend = ((29 - i) / 29) * 8;
-    const noise = Math.sin(i * 2.5) * 6 + Math.cos(i * 1.3) * 4;
-    const score = Math.min(100, Math.max(40, Math.round(base + trend + noise)));
-    data.push({ date: `${month}/${day}`, score });
-  }
-  return data;
-}
-
 const recentResults = [
   { id: 1, name: '2025년 국가직 9급 모의고사', date: '2026.04.01', score: 82, duration: '47분', passed: true },
   { id: 2, name: '행정법 집중훈련 Vol.3', date: '2026.03.30', score: 71, duration: '38분', passed: false },
@@ -51,43 +43,77 @@ const recentResults = [
   { id: 5, name: '영어 독해 심화 훈련', date: '2026.03.25', score: 65, duration: '44분', passed: false },
 ];
 
-const statCards = [
-  {
-    label: '오늘 풀이',
-    value: '47문제',
-    icon: BookOpen,
-    iconColor: 'text-linear-accent-violet',
-    iconBg: 'bg-linear-brand-indigo/10',
-    badge: null,
-  },
-  {
-    label: '오늘 정답률',
-    value: '78.7%',
-    icon: CheckCircle2,
-    iconColor: 'text-linear-status-emerald',
-    iconBg: 'bg-linear-status-emerald/10',
-    badge: { label: '+3.2%', positive: true },
-  },
-  {
-    label: '연속 학습일',
-    value: '14일',
-    icon: Flame,
-    iconColor: 'text-red-500',
-    iconBg: 'bg-red-500/10',
-    badge: null,
-  },
-  {
-    label: '전체 정답률',
-    value: '74.2%',
-    icon: TrendingUp,
-    iconColor: 'text-linear-brand-indigo',
-    iconBg: 'bg-linear-brand-indigo/10',
-    badge: { label: '+1.8%', positive: true },
-  },
-];
-
 export default function DashboardPage() {
-  const trendData = useMemo(() => generate30DaysData(), []);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<Awaited<ReturnType<typeof analyticsService.getAnalyticsData>>['summary'] | null>(null);
+  const [dailyRecords, setDailyRecords] = useState<Awaited<ReturnType<typeof analyticsService.getAnalyticsData>>['dailyRecords']>([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    void analyticsService.getAnalyticsData()
+      .then((data) => {
+        if (!mounted) return;
+        setSummary(data.summary);
+        setDailyRecords(data.dailyRecords);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setLoadError('학습 통계를 불러오지 못했습니다.');
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setIsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const todayRecord = useMemo(() => getTodayRecord(dailyRecords), [dailyRecords]);
+  const streakDays = useMemo(() => calculateStreakDays(dailyRecords), [dailyRecords]);
+  const trendData = useMemo(() => dailyRecordsToTrendLine(dailyRecords), [dailyRecords]);
+
+  const todayQuestions = todayRecord?.questionCount ?? 0;
+  const todayAccuracy = todayRecord ? toAccuracyPercent(todayRecord.accuracy) : 0;
+  const overallAccuracy = summary ? toAccuracyPercent(summary.accuracy) : 0;
+  const totalStudyLabel = summary ? formatStudyDuration(summary.totalStudySeconds) : '-';
+
+  const statCards = useMemo(
+    () => [
+      {
+        label: '오늘 풀이',
+        value: `${todayQuestions}문제`,
+        icon: BookOpen,
+        iconColor: 'text-linear-accent-violet',
+        iconBg: 'bg-linear-brand-indigo/10',
+      },
+      {
+        label: '오늘 정답률',
+        value: `${todayAccuracy}%`,
+        icon: CheckCircle2,
+        iconColor: 'text-linear-status-emerald',
+        iconBg: 'bg-linear-status-emerald/10',
+      },
+      {
+        label: '연속 학습일',
+        value: `${streakDays}일`,
+        icon: Flame,
+        iconColor: 'text-red-500',
+        iconBg: 'bg-red-500/10',
+      },
+      {
+        label: '전체 정답률',
+        value: `${overallAccuracy}%`,
+        icon: TrendingUp,
+        iconColor: 'text-linear-brand-indigo',
+        iconBg: 'bg-linear-brand-indigo/10',
+      },
+    ],
+    [overallAccuracy, streakDays, todayAccuracy, todayQuestions],
+  );
 
   return (
     <div className="min-h-screen bg-white px-4 py-8 text-linear-text-primary md:px-8">
@@ -98,12 +124,18 @@ export default function DashboardPage() {
           description="오늘 집중할 영역과 최근 흐름을 먼저 확인하세요."
           icon={LayoutDashboard}
           stats={[
-            { label: '오늘 풀이', value: '47', tone: 'brand' },
-            { label: '정답률', value: '78.7%', tone: 'success' },
-            { label: '연속', value: '14일', tone: 'warning' },
-            { label: '전체', value: '74.2%', tone: 'default' },
+            { label: '오늘 풀이', value: isLoading ? '-' : todayQuestions, tone: 'brand' },
+            { label: '정답률', value: isLoading ? '-' : `${todayAccuracy}%`, tone: 'success' },
+            { label: '연속', value: isLoading ? '-' : `${streakDays}일`, tone: 'warning' },
+            { label: '학습 시간', value: isLoading ? '-' : totalStudyLabel, tone: 'default' },
           ]}
         />
+
+        {loadError && (
+          <div className="rounded-[10px] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500">
+            {loadError}
+          </div>
+        )}
 
         <SurfacePanel className="overflow-hidden border-linear-brand-indigo/20 bg-[linear-gradient(135deg,rgba(15,118,110,0.08),#ffffff_46%)] p-5">
           <div className="flex gap-4">
@@ -130,14 +162,11 @@ export default function DashboardPage() {
                   <div className={`${card.iconBg} rounded-[8px] p-2.5`}>
                     <Icon className={`h-4 w-4 ${card.iconColor}`} strokeWidth={1.7} />
                   </div>
-                  {card.badge && (
-                    <span className="rounded-full bg-linear-status-emerald/10 px-2 py-0.5 text-xs font-medium text-linear-status-emerald">
-                      {card.badge.label}
-                    </span>
-                  )}
                 </div>
                 <div className="mt-4">
-                  <p className="text-2xl font-semibold tracking-[-0.04em] text-linear-text-primary">{card.value}</p>
+                  <p className="text-2xl font-semibold tracking-[-0.04em] text-linear-text-primary">
+                    {isLoading ? <Loader2 className="h-6 w-6 animate-spin text-linear-text-tertiary" /> : card.value}
+                  </p>
                   <p className="mt-1 text-xs font-medium text-linear-text-tertiary">{card.label}</p>
                 </div>
               </SurfacePanel>
@@ -147,11 +176,17 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <RadarChart data={radarData} title="과목별 정답률" />
-          <LineChart
-            data={trendData}
-            lines={[{ key: 'score', color: '#0f766e', name: '정답률' }]}
-            title="최근 30일 성적 추이"
-          />
+          {isLoading ? (
+            <SurfacePanel className="flex min-h-[360px] items-center justify-center p-6">
+              <Loader2 className="h-8 w-8 animate-spin text-linear-accent-violet" />
+            </SurfacePanel>
+          ) : (
+            <LineChart
+              data={trendData}
+              lines={[{ key: 'score', color: '#0f766e', name: '정답률' }]}
+              title="최근 30일 정답률 추이"
+            />
+          )}
         </div>
 
         <SurfacePanel className="overflow-hidden">

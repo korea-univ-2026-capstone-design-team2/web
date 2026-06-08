@@ -1,12 +1,22 @@
 'use client';
 
-import { useMemo } from 'react';
-import { TrendingDown, AlertCircle, BookOpen, Zap, Activity, Target } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { TrendingDown, AlertCircle, BookOpen, Zap, Activity, Target, Loader2 } from 'lucide-react';
 import RadarChart from '@/components/analytics/RadarChart';
 import LineChart from '@/components/analytics/LineChart';
 import BarChart from '@/components/analytics/BarChart';
 import { PageHero, SurfacePanel } from '@/components/common/PageHero';
 import { cn } from '@/lib/utils';
+import {
+  ANALYTICS_PERIOD_DAYS,
+  calculateAccuracyTrend,
+  dailyRecordsToTrendLine,
+  dailyRecordsToWeekdayBar,
+  findLowestAccuracyDay,
+  formatStudyDuration,
+  toAccuracyPercent,
+} from '@/lib/analytics/helpers';
+import { analyticsService } from '@/lib/services/analyticsService';
 
 const radarData = [
   { subject: '국어', score: 79 },
@@ -16,41 +26,6 @@ const radarData = [
   { subject: '행정법', score: 71 },
   { subject: '사회', score: 62 },
 ];
-
-const weeklyData = [
-  { name: '월', count: 32 },
-  { name: '화', count: 45 },
-  { name: '수', count: 28 },
-  { name: '목', count: 60 },
-  { name: '금', count: 41 },
-  { name: '토', count: 78 },
-  { name: '일', count: 55 },
-];
-
-function generate30DaysMultiData() {
-  const data = [];
-  const subjects = {
-    korean: { base: 72, amplitude: 6 },
-    english: { base: 61, amplitude: 8 },
-    history: { base: 80, amplitude: 5 },
-    adminLaw: { base: 64, amplitude: 9 },
-  };
-  const now = new Date(2026, 3, 2);
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const month = d.getMonth() + 1;
-    const day = d.getDate();
-    const trend = ((29 - i) / 29) * 7;
-    const entry: Record<string, string | number> = { date: `${month}/${day}` };
-    (Object.entries(subjects) as [string, { base: number; amplitude: number }][]).forEach(([key, cfg]) => {
-      const noise = Math.sin(i * 2.1 + key.length) * cfg.amplitude;
-      entry[key] = Math.min(100, Math.max(30, Math.round(cfg.base + trend + noise)));
-    });
-    data.push(entry);
-  }
-  return data;
-}
 
 const heatmapData = [
   {
@@ -166,8 +141,47 @@ function accuracyTone(accuracy: number): string {
   return 'border-linear-brand-indigo/20 bg-linear-brand-indigo/8 text-linear-accent-violet';
 }
 
+function formatTrendLabel(value: number): string {
+  if (value > 0) return `+${value}%p`;
+  if (value < 0) return `${value}%p`;
+  return '0%p';
+}
+
 export default function AnalyticsPage() {
-  const trendData = useMemo(() => generate30DaysMultiData(), []);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<Awaited<ReturnType<typeof analyticsService.getAnalyticsData>>['summary'] | null>(null);
+  const [dailyRecords, setDailyRecords] = useState<Awaited<ReturnType<typeof analyticsService.getAnalyticsData>>['dailyRecords']>([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    void analyticsService.getAnalyticsData()
+      .then((data) => {
+        if (!mounted) return;
+        setSummary(data.summary);
+        setDailyRecords(data.dailyRecords);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setLoadError('학습 통계를 불러오지 못했습니다.');
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setIsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const trendData = useMemo(() => dailyRecordsToTrendLine(dailyRecords), [dailyRecords]);
+  const weeklyData = useMemo(() => dailyRecordsToWeekdayBar(dailyRecords), [dailyRecords]);
+  const accuracyTrend = useMemo(() => calculateAccuracyTrend(dailyRecords), [dailyRecords]);
+  const lowestAccuracy = useMemo(() => findLowestAccuracyDay(dailyRecords), [dailyRecords]);
+  const overallAccuracy = summary ? toAccuracyPercent(summary.accuracy) : 0;
+  const totalQuestions = summary?.totalQuestions ?? 0;
 
   return (
     <div className="min-h-screen bg-white px-4 py-8 text-linear-text-primary md:px-8">
@@ -178,16 +192,28 @@ export default function AnalyticsPage() {
           description="취약한 영역과 최근 성적 흐름을 확인하세요."
           icon={Activity}
           stats={[
-            { label: '최저 단원', value: '38%', tone: 'danger' },
-            { label: '추세', value: '+7%', tone: 'success' },
-            { label: '주의 파트', value: '5개', tone: 'warning' },
-            { label: '분석 기간', value: '30일', tone: 'default' },
+            { label: '최저 일별', value: isLoading ? '-' : `${lowestAccuracy}%`, tone: 'danger' },
+            { label: '추세', value: isLoading ? '-' : formatTrendLabel(accuracyTrend), tone: accuracyTrend >= 0 ? 'success' : 'warning' },
+            { label: '총 풀이', value: isLoading ? '-' : `${totalQuestions}문항`, tone: 'warning' },
+            { label: '분석 기간', value: `${ANALYTICS_PERIOD_DAYS}일`, tone: 'default' },
           ]}
         />
 
+        {loadError && (
+          <div className="rounded-[10px] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-500">
+            {loadError}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <RadarChart data={radarData} title="과목별 정답률" />
-          <BarChart data={weeklyData} dataKey="count" title="요일별 풀이량" color="#0f766e" labelKey="name" />
+          {isLoading ? (
+            <SurfacePanel className="flex min-h-[360px] items-center justify-center p-6">
+              <Loader2 className="h-8 w-8 animate-spin text-linear-accent-violet" />
+            </SurfacePanel>
+          ) : (
+            <BarChart data={weeklyData} dataKey="count" title="요일별 풀이량" color="#0f766e" labelKey="name" />
+          )}
         </div>
 
         <SurfacePanel className="overflow-hidden p-6">
@@ -234,23 +260,28 @@ export default function AnalyticsPage() {
           </div>
         </SurfacePanel>
 
-        <LineChart
-          data={trendData}
-          lines={[
-            { key: 'korean', color: '#0f766e', name: '국어' },
-            { key: 'english', color: '#14b8a6', name: '영어' },
-            { key: 'history', color: '#10b981', name: '한국사' },
-            { key: 'adminLaw', color: '#f97316', name: '행정법' },
-          ]}
-          title="최근 30일 과목별 성적 추이"
-        />
+        {isLoading ? (
+          <SurfacePanel className="flex min-h-[360px] items-center justify-center p-6">
+            <Loader2 className="h-8 w-8 animate-spin text-linear-accent-violet" />
+          </SurfacePanel>
+        ) : (
+          <LineChart
+            data={trendData}
+            lines={[{ key: 'score', color: '#0f766e', name: '정답률' }]}
+            title="최근 30일 정답률 추이"
+          />
+        )}
 
         <SurfacePanel className="overflow-hidden">
           <div className="flex items-center gap-2 border-b border-border px-5 py-4">
             <Target className="h-4 w-4 text-linear-accent-violet" />
             <div>
-              <h3 className="text-sm font-semibold text-linear-text-primary">취약 파트 TOP 5</h3>
-              <p className="mt-0.5 text-xs text-linear-text-tertiary">우선순위가 높은 복습 후보입니다.</p>
+              <h3 className="text-sm font-semibold text-linear-text-primary">기간 요약</h3>
+              <p className="mt-0.5 text-xs text-linear-text-tertiary">
+                {isLoading
+                  ? '통계를 불러오는 중입니다.'
+                  : `최근 ${ANALYTICS_PERIOD_DAYS}일 · 정답률 ${overallAccuracy}% · 학습 ${summary ? formatStudyDuration(summary.totalStudySeconds) : '-'}`}
+              </p>
             </div>
           </div>
           <div className="divide-y divide-border/70">
@@ -281,7 +312,9 @@ export default function AnalyticsPage() {
           </div>
         </SurfacePanel>
 
-        <BarChart data={weeklyData} dataKey="count" title="학습 패턴 분석" color="#14b8a6" labelKey="name" />
+        {!isLoading && (
+          <BarChart data={weeklyData} dataKey="count" title="학습 패턴 분석" color="#14b8a6" labelKey="name" />
+        )}
       </div>
     </div>
   );

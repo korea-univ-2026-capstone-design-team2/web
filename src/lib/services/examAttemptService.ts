@@ -15,7 +15,7 @@ export const examAttemptService = {
   },
 
   saveAnswers: async (
-    attemptId: number,
+    attemptId: string,
     payload: SaveExamAttemptAnswersReqDto,
   ): Promise<SaveExamAttemptAnswersResDto> => {
     return apiRequest<SaveExamAttemptAnswersResDto>(`/exam-attempts/${attemptId}/answers`, {
@@ -24,14 +24,14 @@ export const examAttemptService = {
     });
   },
 
-  submit: async (attemptId: number, payload: SubmitExamAttemptReqDto): Promise<SubmitExamAttemptResDto> => {
+  submit: async (attemptId: string, payload: SubmitExamAttemptReqDto): Promise<SubmitExamAttemptResDto> => {
     return apiRequest<SubmitExamAttemptResDto>(`/exam-attempts/${attemptId}/submit`, {
       method: 'POST',
       body: payload,
     });
   },
 
-  getResult: async (attemptId: number): Promise<GetExamAttemptResultResDto> => {
+  getResult: async (attemptId: string): Promise<GetExamAttemptResultResDto> => {
     return apiRequest<GetExamAttemptResultResDto>(`/exam-attempts/${attemptId}/result`);
   },
 };

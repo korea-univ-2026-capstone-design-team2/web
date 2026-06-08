@@ -55,8 +55,8 @@ export interface QuestionItemPropositionView {
 }
 
 export interface QuestionItemPaperView {
-  questionItemId: number;
-  questionId: number;
+  questionItemId: string;
+  questionId: string;
   subject: Subject;
   questionType: QuestionType;
   questionSubType: QuestionSubType | null;
@@ -70,8 +70,8 @@ export interface QuestionItemPaperView {
 }
 
 export interface QuestionPaperView {
-  questionId: number;
-  generationId: number;
+  questionId: string;
+  generationId: string;
   subject: Subject;
   questionType: QuestionType;
   difficulty: DifficultyLevel;
@@ -92,15 +92,15 @@ export interface QuestionReviewView extends Omit<QuestionPaperView, 'items'> {
 }
 
 export interface GetQuestionPapersReqDto {
-  questionIds: number[];
+  questionIds: string[];
 }
 
 export interface GetQuestionReviewsReqDto {
-  questionIds: number[];
+  questionIds: string[];
 }
 
 export interface QuestionItemDetailView extends QuestionItemReviewView {
-  generationId: number;
+  generationId: string;
   status: 'DRAFT' | 'PUBLISHED' | 'REJECTED';
   qualityScore: number | null;
 }
@@ -113,8 +113,8 @@ export interface QuestionDetailView extends Omit<QuestionReviewView, 'items'> {
 }
 
 export interface QuestionSummary {
-  questionId: number;
-  questionSetId: number | null;
+  questionId: string;
+  questionSetId: string | null;
   subject: Subject;
   questionType: QuestionType;
   questionSubType: QuestionSubType | null;
@@ -124,9 +124,9 @@ export interface QuestionSummary {
 }
 
 export interface QuestionPaper extends Omit<QuestionItemPaperView, 'questionId'> {
-  questionId: number;
-  groupQuestionId: number;
-  generationId: number;
+  questionId: string;
+  groupQuestionId: string;
+  generationId: string;
   sharedContextContent: string | null;
   sharedContextDescription: string | null;
   passageType: string | null;
@@ -149,7 +149,7 @@ export interface QuestionDetail extends QuestionReview {
   qualityScore: number | null;
   passageTopicCategory: TopicCategory | string | null;
   passageTopicKeyword: string | null;
-  frameId: number;
+  frameId: string;
   similarityScore: number;
   frameType: string;
 }
@@ -166,16 +166,16 @@ export interface GenerateQuestionReqDto {
 }
 
 export interface GenerateQuestionResDto {
-  generationId: number;
-  questionIds: number[];
+  generationId: string;
+  questionIds: string[];
   successCount: number;
   failCount: number;
   status: string;
 }
 
 export interface CreateQuestionResDto {
-  questionId: number;
-  questionItemIds: number[];
+  questionId: string;
+  questionItemIds: string[];
 }
 
 export interface GenerateExamReqDto {
@@ -191,9 +191,9 @@ export interface GenerateExamReqDto {
 }
 
 export interface GenerateExamResDto {
-  examId: number;
+  examId: string;
   status: ExamStatus;
-  generationId: number | null;
+  generationId: string | null;
   successCount: number;
   failCount: number;
 }
@@ -208,7 +208,7 @@ export interface GetExamListParams {
 }
 
 export interface ExamSummaryResDto {
-  examId: number;
+  examId: string;
   title: string;
   subject: Subject;
   questionType: QuestionType;
@@ -227,13 +227,13 @@ export interface GetExamListResDto {
 }
 
 export interface ExamItemResDto {
-  examItemId: number;
-  questionId: number;
+  examItemId: string;
+  questionId: string;
   ordering: number;
 }
 
 export interface GetExamDetailResDto {
-  examId: number;
+  examId: string;
   title: string;
   subject: Subject;
   questionType: QuestionType;
@@ -244,7 +244,7 @@ export interface GetExamDetailResDto {
   topicDescription: string | null;
   targetQuestionCount: number;
   status: ExamStatus;
-  generationId: number | null;
+  generationId: string | null;
   generationSuccessCount: number | null;
   generationFailCount: number | null;
   items: ExamItemResDto[];
@@ -254,7 +254,7 @@ export interface GetExamDetailResDto {
 
 export interface TokenUsageFilters {
   targetDomain?: TokenUsageTargetDomain;
-  targetReferenceId?: number;
+  targetReferenceId?: string;
   provider?: AiProvider;
   model?: AiModel;
   status?: TokenUsageStatus;
@@ -265,9 +265,9 @@ export interface TokenUsageFilters {
 }
 
 export interface TokenUsageSummaryView {
-  tokenUsageId: number;
+  tokenUsageId: string;
   targetDomain: TokenUsageTargetDomain;
-  targetReferenceId: number;
+  targetReferenceId: string;
   provider: AiProvider;
   model: AiModel;
   promptTokens: number;
@@ -286,7 +286,7 @@ export interface GetTokenUsageListResult {
 
 export interface RecordTokenUsageReqDto {
   targetDomain: TokenUsageTargetDomain;
-  targetReferenceId: number;
+  targetReferenceId: string;
   provider: AiProvider;
   model: AiModel;
   promptTokens: number;
@@ -299,7 +299,7 @@ export interface RecordTokenUsageReqDto {
 }
 
 export interface RecordTokenUsageResDto {
-  tokenUsageId: number;
+  tokenUsageId: string;
 }
 
 export interface TokenUsageStatisticsView {
@@ -324,18 +324,18 @@ export interface IngestFrameReqDto {
 }
 
 export interface StartExamAttemptReqDto {
-  examId: number;
+  examId: string;
 }
 
 export interface StartExamAttemptResDto {
-  attemptId: number;
-  examId: number;
+  attemptId: string;
+  examId: string;
   status: string;
   startedAt: string;
 }
 
 export interface SaveExamAttemptAnswerReqDto {
-  questionItemId: number;
+  questionItemId: string;
   selectedNumber: number | null;
   timeSpentSeconds: number;
   markedUnknown: boolean;
@@ -347,13 +347,13 @@ export interface SaveExamAttemptAnswersReqDto {
 }
 
 export interface SaveExamAttemptAnswersResDto {
-  attemptId: number;
+  attemptId: string;
   savedCount: number;
   updatedAt: string;
 }
 
 export interface SubmitExamAttemptAnswerReqDto {
-  questionItemId: number;
+  questionItemId: string;
   selectedNumber: number | null;
   timeSpentSeconds: number;
   markedUnknown: boolean;
@@ -365,14 +365,14 @@ export interface SubmitExamAttemptReqDto {
 }
 
 export interface SubmitExamAttemptResDto {
-  attemptId: number;
-  examId: number;
+  attemptId: string;
+  examId: string;
   status: string;
   submittedAt: string;
 }
 
 export interface ExamAttemptResultItemResDto {
-  questionItemId: number;
+  questionItemId: string;
   selectedNumber: number | null;
   correctNumber: number;
   correct: boolean;
@@ -380,8 +380,8 @@ export interface ExamAttemptResultItemResDto {
 }
 
 export interface GetExamAttemptResultResDto {
-  attemptId: number;
-  examId: number;
+  attemptId: string;
+  examId: string;
   status: string;
   totalCount: number;
   correctCount: number;
@@ -390,6 +390,30 @@ export interface GetExamAttemptResultResDto {
   timeSpentSeconds: number;
   submittedAt: string;
   items: ExamAttemptResultItemResDto[];
+}
+
+export interface AnalyticsDateRangeParams {
+  from: string;
+  to: string;
+}
+
+export interface AnalyticsSummaryResDto {
+  totalQuestions: number;
+  totalCorrect: number;
+  totalStudySeconds: number;
+  accuracy: number;
+}
+
+export interface AnalyticsDailyRecordResDto {
+  date: string;
+  questionCount: number;
+  correctCount: number;
+  studySeconds: number;
+  accuracy: number;
+}
+
+export interface GetAnalyticsDailyRecordsResDto {
+  items: AnalyticsDailyRecordResDto[];
 }
 
 export const SUBJECT_LABEL: Record<Subject, string> = {

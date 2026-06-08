@@ -35,7 +35,7 @@ import { examService } from '@/lib/services/examService';
 import type { GetExamAttemptResultResDto, QuestionReview } from '@/types/question-dto';
 import { SUBJECT_LABEL } from '@/types/question-dto';
 
-const DEFAULT_QUESTION_IDS = Array.from({ length: 20 }, (_, i) => i + 1);
+const DEFAULT_QUESTION_IDS = Array.from({ length: 20 }, (_, i) => String(i + 1));
 const EXAM_DURATION_SECONDS = 42 * 60 + 18;
 const EXAM_DATE = '2026-05-18 14:30';
 
@@ -83,7 +83,7 @@ export default function ResultPage() {
   const searchParams = useSearchParams();
   const examId = params.examId as string;
   const attemptIdParam = searchParams.get('attemptId');
-  const attemptId = attemptIdParam && /^\d+$/.test(attemptIdParam) ? Number(attemptIdParam) : null;
+  const attemptId = attemptIdParam?.trim() ? attemptIdParam : null;
   const useBackendResult = hasApiBaseUrl() && attemptId !== null;
 
   const [reviews, setReviews] = useState<QuestionReview[]>([]);
@@ -123,7 +123,7 @@ export default function ResultPage() {
   }, [attemptId, examId, useBackendResult]);
 
   const resultItemsByQuestionId = useMemo(() => {
-    if (!attemptResult) return new Map<number, GetExamAttemptResultResDto['items'][number]>();
+    if (!attemptResult) return new Map<string, GetExamAttemptResultResDto['items'][number]>();
     return new Map(attemptResult.items.map((item) => [item.questionItemId, item]));
   }, [attemptResult]);
 

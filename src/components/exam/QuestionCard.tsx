@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import AnswerOption from './AnswerOption';
 
 export interface Question {
-  questionId: number;
+  questionId: string;
   number: number;
   content: string;
   passage?: string;

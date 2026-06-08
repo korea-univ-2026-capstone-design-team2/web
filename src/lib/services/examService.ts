@@ -73,8 +73,8 @@ function calculateExamResult(session: ExamSession): ExamResult {
   };
 }
 
-function isBackendExamId(examId: string): boolean {
-  return /^\d+$/.test(examId);
+function isMockExamId(examId: string): boolean {
+  return examId.startsWith('mock_');
 }
 
 export const examService = {
@@ -91,7 +91,7 @@ export const examService = {
     return apiRequest<GetExamListResDto>('/exams', { query: params });
   },
 
-  getBackendExamDetail: async (examId: number): Promise<GetExamDetailResDto> => {
+  getBackendExamDetail: async (examId: string): Promise<GetExamDetailResDto> => {
     return apiRequest<GetExamDetailResDto>(`/exams/${examId}`);
   },
 
@@ -99,10 +99,10 @@ export const examService = {
     return apiRequest<GenerateExamResDto>('/exams', { method: 'POST', body: payload });
   },
 
-  getExamQuestionIds: async (examId: string): Promise<number[]> => {
-    if (hasApiBaseUrl() && isBackendExamId(examId)) {
+  getExamQuestionIds: async (examId: string): Promise<string[]> => {
+    if (hasApiBaseUrl() && !isMockExamId(examId)) {
       try {
-        const detail = await examService.getBackendExamDetail(Number(examId));
+        const detail = await examService.getBackendExamDetail(examId);
         const questionIds = [...detail.items]
           .sort((a, b) => a.ordering - b.ordering)
           .map((item) => item.questionId);
@@ -112,7 +112,7 @@ export const examService = {
       }
     }
 
-    return mockQuestions.slice(0, 20).map((question) => question.questionId);
+    return mockQuestions.slice(0, 20).map((question) => String(question.questionId));
   },
 
   createExamSession: async (

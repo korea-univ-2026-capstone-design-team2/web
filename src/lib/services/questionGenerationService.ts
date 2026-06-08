@@ -10,7 +10,7 @@ export const questionGenerationService = {
     return apiRequest<GenerateQuestionResDto>('/question-generations', { method: 'POST', body: payload });
   },
 
-  getGenerationEventsUrl: (generationId: number): string | null => {
+  getGenerationEventsUrl: (generationId: string): string | null => {
     const baseUrl = getApiBaseUrl();
     if (!baseUrl) return null;
     return `${baseUrl}/question-generations/${generationId}/events`;
