@@ -12,7 +12,6 @@ import {
   FileText,
   Loader2,
   Plus,
-  Play,
   RefreshCw,
   Sparkles,
   XCircle,
@@ -92,6 +91,16 @@ function StatusIcon({ status }: { status: ExamStatus }) {
   return <Loader2 className="h-4 w-4 animate-spin" />;
 }
 
+function canStartExam(exam: ExamSummaryResDto): boolean {
+  return exam.status === 'READY' && exam.actualQuestionCount > 0;
+}
+
+function startButtonLabel(exam: ExamSummaryResDto): string {
+  if (exam.status === 'READY' && exam.actualQuestionCount === 0) return '문제 준비 중';
+  if (canStartExam(exam)) return '응시하기';
+  return STATUS_LABEL[exam.status];
+}
+
 export default function ExamPage() {
   const router = useRouter();
   const [exams, setExams] = useState<ExamSummaryResDto[]>([]);
@@ -145,11 +154,14 @@ export default function ExamPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const readyCount = useMemo(() => exams.filter((exam) => exam.status === 'READY').length, [exams]);
+  const readyCount = useMemo(
+    () => exams.filter((exam) => canStartExam(exam)).length,
+    [exams],
+  );
   const generatingCount = useMemo(() => exams.filter((exam) => exam.status === 'GENERATING').length, [exams]);
 
   function handleStart(exam: ExamSummaryResDto) {
-    if (exam.status !== 'READY') return;
+    if (!canStartExam(exam)) return;
     router.push(`/exam/${exam.examId}/session`);
   }
 
@@ -248,7 +260,7 @@ export default function ExamPage() {
           ) : (
             <div className="divide-y divide-border/70">
               {exams.map((exam) => {
-                const canStart = exam.status === 'READY';
+                const canStart = canStartExam(exam);
                 return (
                   <article key={exam.examId} className="grid gap-4 px-5 py-5 transition-colors hover:bg-black/2 md:grid-cols-[1fr_auto]">
                     <div className="min-w-0 space-y-3">
@@ -297,8 +309,7 @@ export default function ExamPage() {
                             : 'cursor-not-allowed border border-border bg-white text-linear-text-tertiary'
                         )}
                       >
-                        <Play className="h-4 w-4" />
-                        {canStart ? '응시하기' : STATUS_LABEL[exam.status]}
+                        {startButtonLabel(exam)}
                       </button>
                     </div>
                   </article>

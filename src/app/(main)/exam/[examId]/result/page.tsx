@@ -35,9 +35,9 @@ import { examService } from '@/lib/services/examService';
 import type { GetExamAttemptResultResDto, QuestionReview } from '@/types/question-dto';
 import { SUBJECT_LABEL } from '@/types/question-dto';
 
-const DEFAULT_QUESTION_IDS = Array.from({ length: 20 }, (_, i) => String(i + 1));
 const EXAM_DURATION_SECONDS = 42 * 60 + 18;
 const EXAM_DATE = '2026-05-18 14:30';
+const EMPTY_EXAM_MESSAGE = '문제가 아직 생성되지 않았습니다.';
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -98,9 +98,13 @@ export default function ResultPage() {
 
       try {
         const questionIds = await examService.getExamQuestionIds(examId);
-        const reviewResponse = await questionService.getQuestionReviewsByIds(
-          questionIds.length ? questionIds : DEFAULT_QUESTION_IDS,
-        );
+
+        if (hasApiBaseUrl() && !examId.startsWith('mock_') && questionIds.length === 0) {
+          setLoadError(EMPTY_EXAM_MESSAGE);
+          return;
+        }
+
+        const reviewResponse = await questionService.getQuestionReviewsByIds(questionIds);
         if (!mounted) return;
         setReviews(reviewResponse);
 

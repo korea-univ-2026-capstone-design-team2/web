@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Clock, AlertTriangle } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronLeft, ChevronRight, Clock, AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import QuestionCard, { type Question as ExamQuestion } from '@/components/exam/QuestionCard';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -16,7 +17,7 @@ import { DIFFICULTY_LABEL, QUESTION_TYPE_LABEL, SUBJECT_LABEL } from '@/types/qu
 
 const TIME_LIMIT_SECONDS = 45 * 60;
 const QUESTIONS_PER_VIEW = 4;
-const DEFAULT_QUESTION_IDS = Array.from({ length: 20 }, (_, i) => String(i + 1));
+const EMPTY_EXAM_MESSAGE = '문제가 아직 생성되지 않았습니다. 모의고사 목록에서 생성 상태를 확인해주세요.';
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -58,6 +59,7 @@ export default function ExamSessionPage() {
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isOmrPanelOpen, setIsOmrPanelOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -157,13 +159,25 @@ export default function ExamSessionPage() {
 
     async function loadSession() {
       setSessionError(null);
+      setIsSessionLoading(true);
 
       try {
         const questionIds = await examService.getExamQuestionIds(examId);
-        const response = await questionService.getQuestionPapersByIds(
-          questionIds.length ? questionIds : DEFAULT_QUESTION_IDS,
-        );
+
+        if (useBackendAttempt && questionIds.length === 0) {
+          setPapers([]);
+          setSessionError(EMPTY_EXAM_MESSAGE);
+          return;
+        }
+
+        const response = await questionService.getQuestionPapersByIds(questionIds);
         if (!mounted) return;
+
+        if (useBackendAttempt && response.length === 0) {
+          setPapers([]);
+          setSessionError('문제를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+          return;
+        }
 
         setPapers(response);
         if (response.length) {
@@ -172,7 +186,7 @@ export default function ExamSessionPage() {
           activeSinceRef.current = Date.now();
         }
 
-        if (useBackendAttempt) {
+        if (useBackendAttempt && response.length > 0) {
           const attempt = await examAttemptService.startAttempt({ examId });
           if (!mounted) return;
           setAttemptId(attempt.attemptId);
@@ -180,6 +194,8 @@ export default function ExamSessionPage() {
       } catch {
         if (!mounted) return;
         setSessionError('시험을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
+      } finally {
+        if (mounted) setIsSessionLoading(false);
       }
     }
 
@@ -370,6 +386,35 @@ export default function ExamSessionPage() {
           >
             답안 제출하기
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isSessionLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white px-4 py-8 text-linear-text-primary">
+        <div className="flex flex-col items-center gap-3 text-linear-text-tertiary">
+          <Loader2 className="h-8 w-8 animate-spin text-linear-accent-violet" />
+          <p className="text-sm">시험을 준비하는 중입니다.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!papers.length) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white px-4 py-8 text-linear-text-primary">
+        <div className="w-full max-w-md space-y-4 rounded-[12px] border border-border bg-white p-6 text-center shadow-[var(--shadow-level-2)]">
+          <p className="text-sm text-linear-text-secondary">
+            {sessionError ?? EMPTY_EXAM_MESSAGE}
+          </p>
+          <Link
+            href="/exam"
+            className="inline-flex items-center justify-center rounded-[8px] bg-linear-brand-indigo px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-linear-brand-indigo/90"
+          >
+            모의고사 목록으로
+          </Link>
         </div>
       </div>
     );

@@ -101,15 +101,10 @@ export const examService = {
 
   getExamQuestionIds: async (examId: string): Promise<string[]> => {
     if (hasApiBaseUrl() && !isMockExamId(examId)) {
-      try {
-        const detail = await examService.getBackendExamDetail(examId);
-        const questionIds = [...detail.items]
-          .sort((a, b) => a.ordering - b.ordering)
-          .map((item) => item.questionId);
-        if (questionIds.length) return questionIds;
-      } catch {
-        // fallback to the local mock question id sequence
-      }
+      const detail = await examService.getBackendExamDetail(examId);
+      return [...detail.items]
+        .sort((a, b) => a.ordering - b.ordering)
+        .map((item) => item.questionId);
     }
 
     return mockQuestions.slice(0, 20).map((question) => String(question.questionId));

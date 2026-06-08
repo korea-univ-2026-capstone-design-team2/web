@@ -18,11 +18,11 @@ import {
 // ── Mock Data ────────────────────────────────────────────────────────────────
 
 const mockUser = {
-  name: "양인용",
-  email: "inyong@example.com",
-  targetExam: "9급 국가직",
+  name: "사용자",
+  email: "user@example.com",
+  targetExam: "5급 PSAT",
   targetScore: 90,
-  initials: "양인",
+  initials: "U",
 };
 
 const mockStats = [

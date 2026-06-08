@@ -210,12 +210,8 @@ export const questionService = {
     if (!questionIds.length) return Promise.resolve([]);
 
     if (hasApiBaseUrl()) {
-      try {
-        const views = await questionService.getQuestionPaperViewsByIds(questionIds);
-        return views.flatMap(normalizePaperView);
-      } catch {
-        // Keep local development usable when the configured backend is unavailable.
-      }
+      const views = await questionService.getQuestionPaperViewsByIds(questionIds);
+      return views.flatMap(normalizePaperView);
     }
 
     return Promise.resolve(getMockPapersByIds(questionIds));
@@ -229,12 +225,8 @@ export const questionService = {
     if (!questionIds.length) return Promise.resolve([]);
 
     if (hasApiBaseUrl()) {
-      try {
-        const views = await questionService.getQuestionReviewViewsByIds(questionIds);
-        return views.flatMap(normalizeReviewView);
-      } catch {
-        // Keep local development usable when the configured backend is unavailable.
-      }
+      const views = await questionService.getQuestionReviewViewsByIds(questionIds);
+      return views.flatMap(normalizeReviewView);
     }
 
     return Promise.resolve(getMockReviewsByIds(questionIds));
