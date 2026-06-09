@@ -541,7 +541,7 @@ export default function ExamSessionPage() {
             <p className="text-sm text-linear-text-secondary">시험을 제출하면 더 이상 수정할 수 없습니다.</p>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-[8px] border border-linear-brand-indigo/25 bg-linear-brand-indigo/10 p-3 text-center">
+              <div className="rounded-[8px] border border-linear-brand-indigo/25 bg-white p-3 text-center">
                 <span className="text-xs text-linear-text-tertiary">답변 완료</span>
                 <p className="mt-1 text-2xl font-bold text-linear-text-primary">{answeredCount}</p>
               </div>
