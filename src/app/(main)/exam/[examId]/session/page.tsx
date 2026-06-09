@@ -543,7 +543,7 @@ export default function ExamSessionPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-[8px] border border-linear-brand-indigo/25 bg-white p-3 text-center">
                 <span className="text-xs text-linear-text-tertiary">답변 완료</span>
-                <p className="mt-1 text-2xl font-bold text-linear-text-primary">{answeredCount}</p>
+                <p className="mt-1 text-2xl font-bold text-linear-brand-indigo">{answeredCount}</p>
               </div>
               <div className="rounded-[8px] border border-border bg-white p-3 text-center">
                 <span className="text-xs text-linear-text-tertiary">미응답</span>
@@ -558,7 +558,7 @@ export default function ExamSessionPage() {
             )}
           </div>
 
-          <DialogFooter className="flex-row gap-2">
+          <DialogFooter className="flex-row gap-2 bg-white">
             <button
               type="button"
               onClick={() => setIsSubmitModalOpen(false)}
