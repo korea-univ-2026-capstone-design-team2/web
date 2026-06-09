@@ -38,11 +38,25 @@ export function dailyRecordsToTrendLine(items: AnalyticsDailyRecordResDto[]) {
   }));
 }
 
+export function getCurrentWeekStart(date: Date = new Date()): Date {
+  const weekStart = new Date(date);
+  const day = weekStart.getDay();
+  const daysFromMonday = day === 0 ? 6 : day - 1;
+  weekStart.setDate(weekStart.getDate() - daysFromMonday);
+  weekStart.setHours(0, 0, 0, 0);
+  return weekStart;
+}
+
+export function filterRecordsToCurrentWeek(items: AnalyticsDailyRecordResDto[]): AnalyticsDailyRecordResDto[] {
+  const weekStartIso = toIsoDate(getCurrentWeekStart());
+  return items.filter((item) => item.date >= weekStartIso);
+}
+
 export function dailyRecordsToWeekdayBar(items: AnalyticsDailyRecordResDto[]) {
   const labels = ['월', '화', '수', '목', '금', '토', '일'];
   const counts = [0, 0, 0, 0, 0, 0, 0];
 
-  for (const item of items) {
+  for (const item of filterRecordsToCurrentWeek(items)) {
     const day = new Date(`${item.date}T00:00:00`).getDay();
     const index = day === 0 ? 6 : day - 1;
     counts[index] += item.questionCount;

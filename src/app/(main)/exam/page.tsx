@@ -92,11 +92,10 @@ function StatusIcon({ status }: { status: ExamStatus }) {
 }
 
 function canStartExam(exam: ExamSummaryResDto): boolean {
-  return exam.status === 'READY' && exam.actualQuestionCount > 0;
+  return exam.status === 'READY';
 }
 
 function startButtonLabel(exam: ExamSummaryResDto): string {
-  if (exam.status === 'READY' && exam.actualQuestionCount === 0) return '문제 준비 중';
   if (canStartExam(exam)) return '응시하기';
   return STATUS_LABEL[exam.status];
 }

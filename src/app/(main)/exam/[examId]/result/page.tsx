@@ -349,12 +349,11 @@ export default function ResultPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-linear-text-primary">AI 분석</p>
-              <p className="text-xs text-linear-text-tertiary">DTO 기반 문항 데이터로 결과가 구성되었습니다.</p>
             </div>
           </div>
           <p className="text-sm leading-7 text-linear-text-secondary">
-            오답 문항의 <span className="font-medium text-red-500">정답 근거(correctReason)</span>와
-            <span className="font-medium text-linear-accent-violet"> 오답 해설(incorrectReasons)</span>은 백엔드 DTO 계약에 맞춰 수신/표시됩니다.
+            오답 문항의 <span className="font-medium text-red-500">정답 근거</span>와
+            <span className="font-medium text-linear-accent-violet"> 오답 해설</span>을 확인하세요.
           </p>
         </div>
 

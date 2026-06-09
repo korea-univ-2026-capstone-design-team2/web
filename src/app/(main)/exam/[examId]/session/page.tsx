@@ -163,21 +163,8 @@ export default function ExamSessionPage() {
 
       try {
         const questionIds = await examService.getExamQuestionIds(examId);
-
-        if (useBackendAttempt && questionIds.length === 0) {
-          setPapers([]);
-          setSessionError(EMPTY_EXAM_MESSAGE);
-          return;
-        }
-
         const response = await questionService.getQuestionPapersByIds(questionIds);
         if (!mounted) return;
-
-        if (useBackendAttempt && response.length === 0) {
-          setPapers([]);
-          setSessionError('문제를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
-          return;
-        }
 
         setPapers(response);
         if (response.length) {
@@ -470,7 +457,7 @@ export default function ExamSessionPage() {
             <div className="border-b border-border px-5 py-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-linear-text-tertiary">
-                  현재 묶음:{' '}
+                  현재 페이지:{' '}
                   <span className="font-semibold text-linear-text-primary">
                     {total ? `${pageStart + 1}~${Math.min(pageStart + QUESTIONS_PER_VIEW, total)}번` : '-'}
                   </span>
@@ -513,7 +500,7 @@ export default function ExamSessionPage() {
                 className="inline-flex items-center gap-1.5 rounded-[8px] border border-border bg-white px-3 py-2 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/6"
               >
                 <ChevronLeft className="h-4 w-4" />
-                이전 묶음
+                이전 페이지
               </button>
 
               <button
@@ -522,7 +509,7 @@ export default function ExamSessionPage() {
                 disabled={pageStart + QUESTIONS_PER_VIEW >= total}
                 className="inline-flex items-center gap-1.5 rounded-[8px] border border-border bg-white px-3 py-2 text-sm text-linear-text-secondary transition-colors hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/6"
               >
-                다음 묶음
+                다음 페이지
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
